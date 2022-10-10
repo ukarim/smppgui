@@ -4,3 +4,5 @@ out/
 target/
 .gradle/
 build/
+
+src/test/java/com/ukarim/smppgui/protocol/SmppClientTest.java

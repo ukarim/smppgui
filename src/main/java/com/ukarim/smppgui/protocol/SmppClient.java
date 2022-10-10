@@ -6,8 +6,14 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class SmppClient {
@@ -17,6 +23,8 @@ public final class SmppClient {
     private final AtomicBoolean active = new AtomicBoolean(true);
 
     private final ExecutorService threadPool = Executors.newFixedThreadPool(1);
+
+    private final Map<Integer, CompletableFuture<Pdu>> syncRespFutures = new ConcurrentHashMap<>();
 
     private final SmppHandler smppHandler;
 
@@ -33,6 +41,21 @@ public final class SmppClient {
         var buffer = pdu.toByteBuffer();
         buffer.flip(); // prepare for writing to socket
         channel.write(buffer);
+    }
+
+    public Pdu sendPduSync(Pdu pdu, long timeoutMillis) throws IOException, TimeoutException {
+        int seqNum = pdu.getSeqNum();
+        var respFuture = new CompletableFuture<Pdu>();
+        syncRespFutures.put(seqNum, respFuture);
+        try {
+            sendPdu(pdu);
+            return respFuture.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Unexpected error while waiting response pdu", e);
+        } finally {
+            // ensure cleanup
+            syncRespFutures.remove(seqNum);
+        }
     }
 
     public void connect(String host, int port) throws IOException {
@@ -68,7 +91,9 @@ public final class SmppClient {
                         smppHandler.handlePdu(null, new IOException("Connection was unexpectedly closed"));
                         try {
                             shutdown();
-                        } catch (IOException e) {}
+                        } catch (IOException e) {
+                            // don't care
+                        }
                         return;
                     }
                     if (readC == 0) {
@@ -76,9 +101,14 @@ public final class SmppClient {
                     }
 
                     for (Pdu pdu : PduParser.parsePdu(buffer)) {
-                        Pdu respPdu = smppHandler.handlePdu(pdu, null);
-                        if (respPdu != null) {
-                            sendPdu(respPdu);
+                        var syncRespFuture = syncRespFutures.remove(pdu.getSeqNum());
+                        if (syncRespFuture != null) {
+                            syncRespFuture.complete(pdu);
+                        } else {
+                            Pdu respPdu = smppHandler.handlePdu(pdu, null);
+                            if (respPdu != null) {
+                                sendPdu(respPdu);
+                            }
                         }
                     }
 
