@@ -17,7 +17,9 @@ public class BindRespPdu implements Pdu {
         this.seqNum = seqNum;
     }
 
-
+    public String getSystemId() {
+        return systemId;
+    }
 
     public void setSystemId(String systemId) {
         this.systemId = systemId;

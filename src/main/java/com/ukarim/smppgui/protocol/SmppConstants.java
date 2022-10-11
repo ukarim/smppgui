@@ -6,4 +6,6 @@ public class SmppConstants {
 
     public static final byte SMPP_34_INTERFACE_VER = 0x34;
 
+    public static final int MAX_PDU_LEN = 2048;
+
 }
