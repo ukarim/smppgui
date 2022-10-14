@@ -3,6 +3,8 @@ package com.ukarim.smppgui.protocol;
 import com.ukarim.smppgui.protocol.pdu.BindRespPdu;
 import com.ukarim.smppgui.protocol.pdu.HeaderPdu;
 import com.ukarim.smppgui.protocol.pdu.Pdu;
+import com.ukarim.smppgui.protocol.pdu.SubmitSmRespPdu;
+import com.ukarim.smppgui.util.ByteUtils;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -53,12 +55,18 @@ class PduParser {
             case BIND_TRANSCEIVER_RESP:
             case BIND_TRANSMITTER_RESP: {
                 var bindRespPdu = new BindRespPdu(cmd, sts, seqNum);
-                consumeBytes(buffer, cmdLen - 16); // TODO consume systemId (and possible TLVs)
+                consumeBytes(buffer, cmdLen - 16); // TODO parse systemId (and possible TLVs)
                 return bindRespPdu;
+            }
+            case SUBMIT_SM_RESP: {
+                var submitSmResp = new SubmitSmRespPdu(sts, seqNum);
+                String messageId = ByteUtils.readCStr(buffer, cmdLen - 16);
+                submitSmResp.setMessageId(messageId);
+                return submitSmResp;
             }
             default:
                 // pdus unsupported on client side
-                throw new SmppException("Unsupported smpp command: %s", cmd);
+                throw new SmppException("Parsing for PDU '%s' not implemented", cmd);
         }
     }
 

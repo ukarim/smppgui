@@ -1,5 +1,6 @@
 package com.ukarim.smppgui.protocol;
 
+import com.ukarim.smppgui.util.FmtUtils;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,7 +55,7 @@ public enum SmppCmd {
     static SmppCmd fromCmdId(int cmdId) throws SmppException {
         var smppCmd = CMD_MAP.get(cmdId);
         if (smppCmd == null) {
-            throw new SmppException("Unknown smpp command with id %s", cmdId);
+            throw new SmppException("Unknown smpp command with id %s", FmtUtils.fmtInt(cmdId));
         }
         return smppCmd;
     }

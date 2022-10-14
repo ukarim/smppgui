@@ -1,5 +1,6 @@
 package com.ukarim.smppgui.protocol;
 
+import com.ukarim.smppgui.util.FmtUtils;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,9 +47,9 @@ public enum SmppStatus {
     ESME_RX_P_APPN(0x00000065, "ESME Receiver Permanent App Error Code"),
     ESME_RX_R_APPN(0x00000066, "ESME Receiver Reject Message Error Code"),
     ESME_RQUERYFAIL(0x00000067, "query_sm request failed"),
-    ESME_RINVOPTPARSTREAM(0x000000C0, "Error in the optional part of the PDU Body."),
+    ESME_RINVOPTPARSTREAM(0x000000C0, "Error in the optional part of the PDU Body"),
     ESME_ROPTPARNOTALLWD(0x000000C1, "Optional Parameter not allowed"),
-    ESME_RINVPARLEN(0x000000C2, "Invalid Parameter Length."),
+    ESME_RINVPARLEN(0x000000C2, "Invalid Parameter Length"),
     ESME_RMISSINGOPTPARAM(0x000000C3, "Expected Optional Parameter missing"),
     ESME_RINVOPTPARAMVAL(0x000000C4, "Invalid Optional Parameter Value"),
     ESME_RDELIVERYFAILURE(0x000000FE, "Delivery Failure (used period for data_sm_resp)"),
@@ -82,7 +83,7 @@ public enum SmppStatus {
     static SmppStatus fromStatusId(int statusId) throws SmppException {
         var smppStatus = STATUS_MAP.get(statusId);
         if (smppStatus == null) {
-            throw new SmppException("Unknown smpp status with id %s", statusId);
+            throw new SmppException("Unknown smpp status with id %s", FmtUtils.fmtInt(statusId));
         }
         return smppStatus;
     }
