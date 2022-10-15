@@ -75,7 +75,10 @@ public class SubmitSmPdu implements Pdu {
 
     @Override
     public ByteBuffer toByteBuffer() {
-        int cmdLen = calcLen();
+        byte[] shortMessageBytes = shortMessage.getBytes(StandardCharsets.UTF_16BE);
+        int smLen = shortMessageBytes.length;
+
+        int cmdLen = calcLen(smLen);
         var buffer = ByteBuffer.allocate(cmdLen);
         buffer.order(ByteOrder.BIG_ENDIAN); // according to SMPP spec
 
@@ -106,22 +109,20 @@ public class SubmitSmPdu implements Pdu {
         buffer.put((byte) 0x08); // data_coding (UCS2)
         buffer.put((byte) 0x00); // sm_default_msg_id
 
-        byte[] shortMessageBytes = shortMessage.getBytes(StandardCharsets.UTF_16BE);
-        int smLen = shortMessageBytes.length;
         buffer.put((byte) smLen);
         buffer.put(shortMessageBytes, 0, smLen);
 
         return buffer;
     }
 
-    private int calcLen() {
+    private int calcLen(int smLen) {
         int len = 28; // sum of lens of fixed-sized fields
         len += ByteUtils.cStrLen(serviceType);
         len += ByteUtils.cStrLen(srcAddress.getAddr());
         len += ByteUtils.cStrLen(destAddress.getAddr());
         len += ByteUtils.cStrLen(scheduleDeliveryTime);
         len += ByteUtils.cStrLen(validityPeriod);
-        len += ByteUtils.cStrLen(shortMessage);
+        len += smLen;
         return len;
     }
 }
