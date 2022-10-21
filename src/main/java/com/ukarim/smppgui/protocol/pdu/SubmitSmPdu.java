@@ -13,11 +13,11 @@ public class SubmitSmPdu implements Pdu {
 
     private final int seqNum;
 
-    private final String serviceType = "smppgui";
-
     private final Address srcAddress;
 
     private final Address destAddress;
+
+    private String serviceType;
 
     private byte protocolId;
 
@@ -38,20 +38,60 @@ public class SubmitSmPdu implements Pdu {
         this.shortMessage = shortMessage;
     }
 
+    public Address getSrcAddress() {
+        return srcAddress;
+    }
+
+    public Address getDestAddress() {
+        return destAddress;
+    }
+
+    public String getShortMessage() {
+        return shortMessage;
+    }
+
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(String serviceType) {
+        this.serviceType = serviceType;
+    }
+
+    public byte getProtocolId() {
+        return protocolId;
+    }
+
     public void setProtocolId(byte protocolId) {
         this.protocolId = protocolId;
+    }
+
+    public byte getPriorityFlag() {
+        return priorityFlag;
     }
 
     public void setPriorityFlag(byte priorityFlag) {
         this.priorityFlag = priorityFlag;
     }
 
+    public String getScheduleDeliveryTime() {
+        return scheduleDeliveryTime;
+    }
+
     public void setScheduleDeliveryTime(String scheduleDeliveryTime) {
         this.scheduleDeliveryTime = scheduleDeliveryTime;
     }
 
+    public String getValidityPeriod() {
+        return validityPeriod;
+    }
+
     public void setValidityPeriod(String validityPeriod) {
         this.validityPeriod = validityPeriod;
+    }
+
+    public byte getRegisteredDelivery() {
+        return registeredDelivery;
     }
 
     public void setRegisteredDelivery(byte registeredDelivery) {

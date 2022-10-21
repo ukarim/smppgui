@@ -1,13 +1,18 @@
 package com.ukarim.smppgui.protocol;
 
+import com.ukarim.smppgui.protocol.pdu.Address;
 import com.ukarim.smppgui.protocol.pdu.BindRespPdu;
+import com.ukarim.smppgui.protocol.pdu.DeliverSmPdu;
 import com.ukarim.smppgui.protocol.pdu.HeaderPdu;
 import com.ukarim.smppgui.protocol.pdu.Pdu;
 import com.ukarim.smppgui.protocol.pdu.SubmitSmRespPdu;
 import com.ukarim.smppgui.util.ByteUtils;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class PduParser {
@@ -30,6 +35,7 @@ class PduParser {
         }
         buffer.mark();
         int cmdLen = buffer.getInt();
+        int maxPos = buffer.position() + cmdLen - 4; // minus 4 (for cmd_len itself)
         if (cmdLen > SmppConstants.MAX_PDU_LEN) {
             buffer.reset();
             throw new SmppException("Too large PDU received. cmd_len is %s, but max allowed is %s",
@@ -55,7 +61,9 @@ class PduParser {
             case BIND_TRANSCEIVER_RESP:
             case BIND_TRANSMITTER_RESP: {
                 var bindRespPdu = new BindRespPdu(cmd, sts, seqNum);
-                consumeBytes(buffer, cmdLen - 16); // TODO parse systemId (and possible TLVs)
+                String systemId = ByteUtils.readCStr(buffer, cmdLen - 16);
+                bindRespPdu.setSystemId(systemId);
+                consumeRemainBytes(buffer, maxPos); // TODO parse possible TLVs
                 return bindRespPdu;
             }
             case SUBMIT_SM_RESP: {
@@ -64,17 +72,65 @@ class PduParser {
                 submitSmResp.setMessageId(messageId);
                 return submitSmResp;
             }
+            case DELIVER_SM: {
+                String serviceType = ByteUtils.readCStr(buffer, cmdLen - 16);
+                byte srcAddrTon = buffer.get();
+                byte srcAddrNpi = buffer.get();
+                String srcAddr = readCStr(buffer, maxPos);
+                byte destTon = buffer.get();
+                byte destNpi = buffer.get();
+                String destAddr = readCStr(buffer, maxPos);
+                byte esmClass = buffer.get();
+                byte protocolId = buffer.get();
+                byte priorityFlag = buffer.get();
+                String schedDeliveryTime = readCStr(buffer, maxPos);
+                String validityPeriod = readCStr(buffer, maxPos);
+                byte regDelivery = buffer.get();
+                byte replaceIfPresent = buffer.get();
+                byte dataCoding = buffer.get();
+                byte smDefMsgId = buffer.get();
+                byte smLen = buffer.get();
+                String shortMsg = readStr(buffer, smLen, dataCoding);
+                consumeRemainBytes(buffer, maxPos); // TODO parse possible TLVs
+                var deliverSm = new DeliverSmPdu(
+                        seqNum,
+                        new Address(srcAddrTon, srcAddrNpi, srcAddr),
+                        new Address(destTon, destNpi, destAddr),
+                        shortMsg
+                );
+                deliverSm.setServiceType(serviceType);
+                deliverSm.setProtocolId(protocolId);
+                deliverSm.setPriorityFlag(priorityFlag);
+                deliverSm.setScheduleDeliveryTime(schedDeliveryTime);
+                deliverSm.setValidityPeriod(validityPeriod);
+                deliverSm.setRegisteredDelivery(regDelivery);
+                return deliverSm;
+            }
             default:
                 // pdus unsupported on client side
                 throw new SmppException("Parsing for PDU '%s' not implemented", cmd);
         }
     }
 
-    private static void consumeBytes(ByteBuffer buffer, int n) {
-        buffer.position(buffer.position() + n);
+    private static String readCStr(ByteBuffer buffer, int maxPos) {
+        int remainedBytes = maxPos - buffer.position();
+        return ByteUtils.readCStr(buffer, remainedBytes);
+    }
+
+    private static void consumeRemainBytes(ByteBuffer buffer, int maxPos) {
+        buffer.position(maxPos);
     }
 
     private static boolean hasBytes(Buffer buffer, int n) {
         return (buffer.limit() - buffer.position()) >= n;
+    }
+
+    public static String readStr(ByteBuffer buffer, int len, byte coding) {
+        int pos = buffer.position();
+        Charset charset = coding == SmppConstants.DATA_CODING_UCS2
+                ? StandardCharsets.UTF_16BE
+                : StandardCharsets.US_ASCII;
+        byte[] bytes = Arrays.copyOfRange(buffer.array(), pos, pos + len);
+        return new String(bytes, charset);
     }
 }

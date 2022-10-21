@@ -8,4 +8,6 @@ public class SmppConstants {
 
     public static final int MAX_PDU_LEN = 2048;
 
+    public static final byte DATA_CODING_UCS2 = 0x08;
+
 }

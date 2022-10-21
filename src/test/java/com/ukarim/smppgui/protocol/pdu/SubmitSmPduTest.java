@@ -30,6 +30,7 @@ class SubmitSmPduTest {
         Address srcAddr = new Address((byte) 0x00, (byte) 0x00, "1001");
         Address destAddr = new Address((byte) 0x00, (byte) 0x00, "77012110000");
         var submitSm = new SubmitSmPdu(102, srcAddr, destAddr, "Test");
+        submitSm.setServiceType("smppgui");
         submitSm.setPriorityFlag((byte) 0x02);
         submitSm.setRegisteredDelivery((byte) 0x01);
         submitSm.setScheduleDeliveryTime("000000000500000R");
