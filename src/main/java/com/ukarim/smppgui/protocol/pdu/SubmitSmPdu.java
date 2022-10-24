@@ -1,6 +1,7 @@
 package com.ukarim.smppgui.protocol.pdu;
 
 import com.ukarim.smppgui.protocol.SmppCmd;
+import com.ukarim.smppgui.protocol.SmppConstants;
 import com.ukarim.smppgui.protocol.SmppStatus;
 import com.ukarim.smppgui.util.ByteUtils;
 import java.nio.ByteBuffer;
@@ -146,7 +147,7 @@ public class SubmitSmPdu implements Pdu {
 
         buffer.put(registeredDelivery);
         buffer.put((byte) 0x00); // replace_if_present_flag
-        buffer.put((byte) 0x08); // data_coding (UCS2)
+        buffer.put((byte) SmppConstants.DATA_CODING_UCS2); // data_coding (UCS2)
         buffer.put((byte) 0x00); // sm_default_msg_id
 
         buffer.put((byte) smLen);
