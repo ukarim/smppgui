@@ -26,16 +26,36 @@ public class BindPdu implements Pdu {
         this.password = password;
     }
 
+    public String getSystemId() {
+        return systemId;
+    }
+
+    public String getSystemType() {
+        return systemType;
+    }
+
     public void setSystemType(String systemType) {
         this.systemType = systemType;
+    }
+
+    public byte getTon() {
+        return ton;
     }
 
     public void setTon(byte ton) {
         this.ton = ton;
     }
 
+    public byte getNpi() {
+        return npi;
+    }
+
     public void setNpi(byte npi) {
         this.npi = npi;
+    }
+
+    public String getAddrRange() {
+        return addrRange;
     }
 
     public void setAddrRange(String addrRange) {

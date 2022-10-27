@@ -34,4 +34,8 @@ class LoggingPane extends JScrollPane {
         textPane.setCaretPosition(0);
         textPane.repaint();
     }
+
+    void printMsg(String fmt, Object... args) {
+        printMsg(String.format(fmt, args));
+    }
 }

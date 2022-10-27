@@ -20,6 +20,8 @@ public class SubmitSmPdu implements Pdu {
 
     private String serviceType;
 
+    private final byte esmClass = (byte) 0x00;
+
     private byte protocolId;
 
     private byte priorityFlag;
@@ -29,6 +31,8 @@ public class SubmitSmPdu implements Pdu {
     private String validityPeriod;
 
     private byte registeredDelivery;
+
+    private final byte dataCoding = SmppConstants.DATA_CODING_UCS2;
 
     private final String shortMessage;
 
@@ -57,6 +61,10 @@ public class SubmitSmPdu implements Pdu {
 
     public void setServiceType(String serviceType) {
         this.serviceType = serviceType;
+    }
+
+    public byte getEsmClass() {
+        return esmClass;
     }
 
     public byte getProtocolId() {
@@ -99,6 +107,10 @@ public class SubmitSmPdu implements Pdu {
         this.registeredDelivery = registeredDelivery;
     }
 
+    public byte getDataCoding() {
+        return dataCoding;
+    }
+
     @Override
     public SmppCmd getCmd() {
         return SmppCmd.SUBMIT_SM;
@@ -138,7 +150,7 @@ public class SubmitSmPdu implements Pdu {
                 .put(destAddress.getNpi());
         ByteUtils.putCStr(buffer, destAddress.getAddr());
 
-        buffer.put((byte) 0x00) // esm_class
+        buffer.put(esmClass)
                 .put(protocolId)
                 .put(priorityFlag);
 
@@ -147,7 +159,7 @@ public class SubmitSmPdu implements Pdu {
 
         buffer.put(registeredDelivery);
         buffer.put((byte) 0x00); // replace_if_present_flag
-        buffer.put((byte) SmppConstants.DATA_CODING_UCS2); // data_coding (UCS2)
+        buffer.put(dataCoding);
         buffer.put((byte) 0x00); // sm_default_msg_id
 
         buffer.put((byte) smLen);
