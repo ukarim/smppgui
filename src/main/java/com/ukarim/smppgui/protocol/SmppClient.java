@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.SocketChannel;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -107,6 +108,10 @@ public final class SmppClient {
 
                     buffer.compact(); // move unread bytes to the begging of array
                 } catch (Exception e) {
+                    if (e instanceof AsynchronousCloseException) {
+                        // NOOP. Channel was closed by `disconnect` method invocation
+                        return;
+                    }
                     smppHandler.handlePdu(null, e);
                 }
             }

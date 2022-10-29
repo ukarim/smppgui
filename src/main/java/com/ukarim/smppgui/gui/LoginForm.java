@@ -13,17 +13,17 @@ import javax.swing.border.EmptyBorder;
 
 class LoginForm extends JPanel implements ActionListener {
 
-    private final LoggingPane loggingPane;
+    private final EventDispatcher eventDispatcher;
 
     private final JTextField hostField;
     private final JTextField portField;
     private final JTextField systemIdField;
     private final JPasswordField passwordField;
-    private final JTextField serviceTypeField;
+    private final JTextField systemTypeField;
     private final JButton button;
 
-    LoginForm(LoggingPane loggingPane) {
-        this.loggingPane = loggingPane;
+    LoginForm(EventDispatcher eventDispatcher) {
+        this.eventDispatcher = eventDispatcher;
         setBorder(new EmptyBorder(10, 10, 10, 10));
         var layout = new GroupLayout(this);
         setLayout(layout);
@@ -43,8 +43,8 @@ class LoginForm extends JPanel implements ActionListener {
         var passwordLabel = new JLabel("Password: ");
         passwordField = new JPasswordField();
 
-        var serviceTypeLabel = new JLabel("Service type: ");
-        serviceTypeField = new JTextField();
+        var serviceTypeLabel = new JLabel("System type: ");
+        systemTypeField = new JTextField();
 
         button = new JButton("Connect");
         button.addActionListener(this);
@@ -62,7 +62,7 @@ class LoginForm extends JPanel implements ActionListener {
                         .addComponent(portField)
                         .addComponent(systemIdField)
                         .addComponent(passwordField)
-                        .addComponent(serviceTypeField)
+                        .addComponent(systemTypeField)
                         .addComponent(button)
                 )
         );
@@ -86,7 +86,7 @@ class LoginForm extends JPanel implements ActionListener {
                 )
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(serviceTypeLabel)
-                        .addComponent(serviceTypeField)
+                        .addComponent(systemTypeField)
                 )
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(button)
@@ -98,18 +98,18 @@ class LoginForm extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent event) {
         String host = hostField.getText();
         if (host == null || host.isBlank()) {
-            loggingPane.printMsg("Host not provided");
+            showError("Host not provided");
             return;
         }
 
         String port = portField.getText();
         if (port == null || port.isBlank()) {
-            loggingPane.printMsg("Port not provided");
+            showError("Port not provided");
             return;
         }
         port = port.trim();
         if (port.startsWith("-")) { // negative values
-            loggingPane.printMsg("Invalid port value provided");
+            showError("Invalid port value provided");
             return;
         }
 
@@ -117,22 +117,29 @@ class LoginForm extends JPanel implements ActionListener {
         try {
             portNum = Integer.parseInt(port);
         } catch (Exception e) {
-            loggingPane.printMsg("Invalid port value provided");
+            showError("Invalid port value provided");
             return;
         }
 
         String systemId = systemIdField.getText();
         if (systemId == null || systemId.isBlank()) {
-            loggingPane.printMsg("System ID not provided");
+            showError("System ID not provided");
             return;
         }
 
         char[] password = passwordField.getPassword();
         if (password == null || password.length == 0) {
-            loggingPane.printMsg("Password not provided");
+            showError("Password not provided");
             return;
         }
 
-        // TODO smpp bind request
+        String systemType = systemTypeField.getText();
+
+        eventDispatcher.dispatch(EventType.DO_LOGIN,
+                new LoginModel(host, portNum, systemId, password, systemType));
+    }
+
+    private void showError(String msg) {
+        eventDispatcher.dispatch(EventType.SHOW_ERROR, msg);
     }
 }

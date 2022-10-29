@@ -3,17 +3,8 @@ package com.ukarim.smppgui.gui;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.border.EmptyBorder;
 
 public class MainFrame extends JFrame {
-
-    private final JPanel container;
-
-    private final LoggingPane loggingPane;
-
-    private final LoginForm loginForm;
 
     public MainFrame() {
         setSize(700, 600);
@@ -23,23 +14,19 @@ public class MainFrame extends JFrame {
 
         setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/icon.png")));
 
-        this.container = new JPanel();
-        this.loggingPane = new LoggingPane();
-        this.loginForm = new LoginForm(loggingPane);
+        var eventDispatcher = new EventDispatcher();
 
-        initGui();
-    }
+        var loggingPane = new LoggingPane();
+        var formsPane = new FormsPane(eventDispatcher);
+        var smppHandler = new SmppHandlerImpl(eventDispatcher);
 
-    private void initGui() {
-        var scrollPane = new JScrollPane(container);
-        scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        getContentPane().add(scrollPane);
+        eventDispatcher.setLoggingPane(loggingPane);
+        eventDispatcher.setFormsPane(formsPane);
+        eventDispatcher.setSmppHandler(smppHandler);
 
-        container.setLayout(new GridLayout(1, 2));
+        setLayout(new GridLayout(1, 2));
 
-        container.add(loginForm);
-        container.add(loggingPane);
+        add(formsPane);
+        add(loggingPane);
     }
 }

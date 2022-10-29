@@ -62,21 +62,21 @@ public final class FmtUtils {
             builder.append("addr_ton: ").append(fmtTon).append("\n");
             var fmtNpi = fmtByte(bindPdu.getNpi());
             builder.append("addr_npi: ").append(fmtNpi).append("\n");
-            builder.append("addr_range: ").append(bindPdu.getAddrRange()).append("\n");
+            builder.append("addr_range: ").append(bindPdu.getAddrRange());
         }
 
         if (pdu instanceof BindRespPdu) {
             var bindRespPdu = (BindRespPdu) pdu;
-            builder.append("system_id: ").append(bindRespPdu.getSystemId()).append("\n");
+            builder.append("system_id: ").append(bindRespPdu.getSystemId());
         }
 
         if (pdu instanceof SubmitSmRespPdu) {
             var submitSmResp = (SubmitSmRespPdu) pdu;
-            builder.append("message_id: ").append(submitSmResp.getMessageId()).append("\n");
+            builder.append("message_id: ").append(submitSmResp.getMessageId());
         }
 
         if (pdu instanceof DeliverSmRespPdu) {
-            builder.append("message_id: null\n"); // always null according to smpp spec
+            builder.append("message_id: null"); // always null according to smpp spec
         }
 
         if (pdu instanceof SubmitSmPdu) { // this for DeliverSmPdu too
@@ -100,7 +100,7 @@ public final class FmtUtils {
             builder.append("validity_period: ").append(submitSm.getValidityPeriod()).append("\n");
             builder.append("registered_delivery: ").append(fmtByte(submitSm.getRegisteredDelivery())).append("\n");
             builder.append("data_coding: ").append(fmtByte(submitSm.getDataCoding())).append("\n");
-            builder.append("short_message: ").append(submitSm.getShortMessage()).append("\n");
+            builder.append("short_message: ").append(submitSm.getShortMessage());
         }
 
         return builder.toString();

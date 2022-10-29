@@ -22,20 +22,14 @@ class LoggingPane extends JScrollPane {
         textPane.setEditable(false);
     }
 
-    // Print in reverse order (new messages appear at the top)
     void printMsg(String msg) {
         if (messages.size() >= MAX_MSG_COUNT) {
-            messages.removeLast();
+            messages.removeFirst();
         }
-        messages.addFirst(msg);
+        messages.addLast(msg);
 
         String text = String.join("\n-----\n", messages);
         textPane.setText(text);
-        textPane.setCaretPosition(0);
         textPane.repaint();
-    }
-
-    void printMsg(String fmt, Object... args) {
-        printMsg(String.format(fmt, args));
     }
 }
