@@ -28,7 +28,7 @@ class LoggingPane extends JScrollPane {
         }
         messages.addLast(msg);
 
-        String text = String.join("\n-----\n", messages);
+        String text = String.join("\n---------------\n", messages);
         textPane.setText(text);
         textPane.repaint();
     }

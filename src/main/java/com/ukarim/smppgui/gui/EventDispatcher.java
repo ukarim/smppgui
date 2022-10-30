@@ -1,11 +1,12 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.core.SmppHandlerImpl;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-class EventDispatcher {
+public class EventDispatcher {
 
     private final ExecutorService workerThread = Executors.newSingleThreadExecutor();
     private LoggingPane loggingPane;
@@ -24,11 +25,15 @@ class EventDispatcher {
         this.smppHandler = smppHandler;
     }
 
-    void dispatch(EventType eventType, Object eventAttach) {
+    public void dispatch(EventType eventType) {
+        dispatch(eventType, null);
+    }
+
+    public void dispatch(EventType eventType, Object eventAttach) {
         SwingUtilities.invokeLater(() -> dispatchInternal(eventType, eventAttach));
     }
 
-    void dispatchInternal(EventType eventType, Object eventAttach) {
+    private void dispatchInternal(EventType eventType, Object eventAttach) {
         switch (eventType) {
             case PRINT_MSG: {
                 loggingPane.printMsg((String) eventAttach);
@@ -45,6 +50,11 @@ class EventDispatcher {
                     LoginModel loginModel = (LoginModel) eventAttach;
                     smppHandler.login(loginModel);
                 });
+                break;
+            }
+            case DISCONNECT: {
+                // Do disconnect in background thread (blocking task)
+                workerThread.execute(() -> smppHandler.disconnect());
                 break;
             }
             case SHOW_SUBMIT_FORM: {

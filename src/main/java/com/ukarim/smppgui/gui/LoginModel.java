@@ -1,6 +1,6 @@
 package com.ukarim.smppgui.gui;
 
-class LoginModel {
+public class LoginModel {
 
     private final String host;
 
@@ -20,23 +20,23 @@ class LoginModel {
         this.systemType = systemType;
     }
 
-    String getHost() {
+    public String getHost() {
         return host;
     }
 
-    int getPort() {
+    public int getPort() {
         return port;
     }
 
-    String getSystemId() {
+    public String getSystemId() {
         return systemId;
     }
 
-    char[] getPassword() {
+    public char[] getPassword() {
         return password;
     }
 
-    String getSystemType() {
+    public String getSystemType() {
         return systemType;
     }
 }

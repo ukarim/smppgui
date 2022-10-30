@@ -1,5 +1,8 @@
-package com.ukarim.smppgui.gui;
+package com.ukarim.smppgui.core;
 
+import com.ukarim.smppgui.gui.EventDispatcher;
+import com.ukarim.smppgui.gui.EventType;
+import com.ukarim.smppgui.gui.LoginModel;
 import com.ukarim.smppgui.protocol.SmppClient;
 import com.ukarim.smppgui.protocol.SmppCmd;
 import com.ukarim.smppgui.protocol.SmppHandler;
@@ -14,8 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// TODO maybe move to another package
-class SmppHandlerImpl implements SmppHandler {
+public class SmppHandlerImpl implements SmppHandler {
 
     private final long TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
@@ -24,7 +26,7 @@ class SmppHandlerImpl implements SmppHandler {
     private final EventDispatcher eventDispatcher;
     private final SmppClient smppClient;
 
-    SmppHandlerImpl(EventDispatcher eventDispatcher) {
+    public SmppHandlerImpl(EventDispatcher eventDispatcher) {
         this.eventDispatcher = eventDispatcher;
         this.smppClient = new SmppClient(this);
     }
@@ -35,7 +37,7 @@ class SmppHandlerImpl implements SmppHandler {
             if (e instanceof IOException) {
                 smppClient.disconnect();
                 showErrorDialog("Network error: %s", e.getMessage());
-                eventDispatcher.dispatchInternal(EventType.SHOW_LOGIN_FORM, null);
+                eventDispatcher.dispatch(EventType.SHOW_LOGIN_FORM);
             }
             printMsg("Error occurred: %s", e.getMessage());
             return null;
@@ -60,7 +62,7 @@ class SmppHandlerImpl implements SmppHandler {
         return null;
     }
 
-    void login(LoginModel loginModel) {
+    public void login(LoginModel loginModel) {
         String host = loginModel.getHost();
         int port = loginModel.getPort();
         String systemId = loginModel.getSystemId();
@@ -81,7 +83,7 @@ class SmppHandlerImpl implements SmppHandler {
             printMsg("Pdu received:\n%s", FmtUtils.fmtPdu(bindResp));
             SmppStatus respSts = bindResp.getSts();
             if (SmppStatus.ESME_ROK.equals(respSts)) {
-                eventDispatcher.dispatch(EventType.SHOW_SUBMIT_FORM, null);
+                eventDispatcher.dispatch(EventType.SHOW_SUBMIT_FORM);
             } else {
                 smppClient.disconnect();
                 showErrorDialog("Connect failed: %s", respSts.getStatusDesc());
@@ -95,11 +97,25 @@ class SmppHandlerImpl implements SmppHandler {
         }
     }
 
+    public void disconnect() {
+        try {
+            var unbind = new HeaderPdu(SmppCmd.UNBIND, nextSeqNum());
+            printMsg("Pdu sent:\n%s", FmtUtils.fmtPdu(unbind));
+            Pdu unbindResp = smppClient.sendPduSync(unbind, TIMEOUT_MILLIS);
+            printMsg("Pdu received:\n%s", FmtUtils.fmtPdu(unbindResp));
+        } catch (Exception e) {
+            showErrorDialog("Diconnect error: %s", e.getMessage());
+        } finally {
+            smppClient.disconnect();
+            eventDispatcher.dispatch(EventType.SHOW_LOGIN_FORM);
+        }
+    }
+
     private void printMsg(String fmt, Object... args) {
         eventDispatcher.dispatch(EventType.PRINT_MSG, String.format(fmt, args));
     }
 
-    private void showErrorDialog(String fmt, Object args) {
+    private void showErrorDialog(String fmt, Object... args) {
         eventDispatcher.dispatch(EventType.SHOW_ERROR, String.format(fmt, args));
     }
 

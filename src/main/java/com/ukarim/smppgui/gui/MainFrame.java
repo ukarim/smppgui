@@ -1,5 +1,6 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.core.SmppHandlerImpl;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import javax.swing.JFrame;
