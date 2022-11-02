@@ -3,14 +3,17 @@ package com.ukarim.smppgui.core;
 import com.ukarim.smppgui.gui.EventDispatcher;
 import com.ukarim.smppgui.gui.EventType;
 import com.ukarim.smppgui.gui.LoginModel;
+import com.ukarim.smppgui.gui.SubmitModel;
 import com.ukarim.smppgui.protocol.SmppClient;
 import com.ukarim.smppgui.protocol.SmppCmd;
 import com.ukarim.smppgui.protocol.SmppHandler;
 import com.ukarim.smppgui.protocol.SmppStatus;
 import com.ukarim.smppgui.protocol.pdu.BindPdu;
 import com.ukarim.smppgui.protocol.pdu.BindRespPdu;
+import com.ukarim.smppgui.protocol.pdu.DeliverSmRespPdu;
 import com.ukarim.smppgui.protocol.pdu.HeaderPdu;
 import com.ukarim.smppgui.protocol.pdu.Pdu;
+import com.ukarim.smppgui.protocol.pdu.SubmitSmPdu;
 import com.ukarim.smppgui.util.FmtUtils;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +62,9 @@ public class SmppHandlerImpl implements SmppHandler {
             // always respond to health check requests with OK status
             return new HeaderPdu(SmppCmd.ENQUIRE_LINK_RESP, SmppStatus.ESME_ROK, seqNum);
         }
+        if (SmppCmd.DELIVER_SM.equals(cmd)) {
+            return new DeliverSmRespPdu(SmppStatus.ESME_ROK, seqNum);
+        }
         return null;
     }
 
@@ -104,10 +110,33 @@ public class SmppHandlerImpl implements SmppHandler {
             Pdu unbindResp = smppClient.sendPduSync(unbind, TIMEOUT_MILLIS);
             printMsg("Pdu received:\n%s", FmtUtils.fmtPdu(unbindResp));
         } catch (Exception e) {
-            showErrorDialog("Diconnect error: %s", e.getMessage());
+            showErrorDialog("Disconnect error: %s", e.getMessage());
         } finally {
             smppClient.disconnect();
             eventDispatcher.dispatch(EventType.SHOW_LOGIN_FORM);
+        }
+    }
+
+    public void submitMessage(SubmitModel submitModel) {
+        try {
+            var submitSmPdu = new SubmitSmPdu(
+                    nextSeqNum(),
+                    submitModel.getSrcAddress(),
+                    submitModel.getDestAddress(),
+                    submitModel.getShortMessage()
+            );
+            submitSmPdu.setServiceType(submitModel.getServiceType());
+            submitSmPdu.setRegisteredDelivery(submitModel.getRegisteredDelivery());
+            submitSmPdu.setProtocolId(submitModel.getProtocolId());
+            submitSmPdu.setPriorityFlag(submitModel.getPriorityFlag());
+            submitSmPdu.setScheduleDeliveryTime(submitModel.getSchedDeliverTime());
+            submitSmPdu.setValidityPeriod(submitModel.getValidityPeriod());
+
+            smppClient.sendPdu(submitSmPdu);
+            printMsg("Pdu sent:\n%s", FmtUtils.fmtPdu(submitSmPdu));
+            showInfoDialog("Short message was sent");
+        } catch (Exception e) {
+            showErrorDialog("Submit error: %s", e.getMessage());
         }
     }
 
@@ -117,6 +146,10 @@ public class SmppHandlerImpl implements SmppHandler {
 
     private void showErrorDialog(String fmt, Object... args) {
         eventDispatcher.dispatch(EventType.SHOW_ERROR, String.format(fmt, args));
+    }
+
+    private void showInfoDialog(String fmt, Object... args) {
+        eventDispatcher.dispatch(EventType.SHOW_INFO, String.format(fmt, args));
     }
 
     private int nextSeqNum() {

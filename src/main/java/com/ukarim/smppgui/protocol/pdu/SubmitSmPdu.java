@@ -3,7 +3,7 @@ package com.ukarim.smppgui.protocol.pdu;
 import com.ukarim.smppgui.protocol.SmppCmd;
 import com.ukarim.smppgui.protocol.SmppConstants;
 import com.ukarim.smppgui.protocol.SmppStatus;
-import com.ukarim.smppgui.util.ByteUtils;
+import com.ukarim.smppgui.util.StringUtils;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -140,22 +140,22 @@ public class SubmitSmPdu implements Pdu {
                 .putInt(sts.getStatusId())
                 .putInt(seqNum);
 
-        ByteUtils.putCStr(buffer, serviceType);
+        StringUtils.putCStr(buffer, serviceType);
 
         buffer.put(srcAddress.getTon())
                 .put(srcAddress.getNpi());
-        ByteUtils.putCStr(buffer, srcAddress.getAddr());
+        StringUtils.putCStr(buffer, srcAddress.getAddr());
 
         buffer.put(destAddress.getTon())
                 .put(destAddress.getNpi());
-        ByteUtils.putCStr(buffer, destAddress.getAddr());
+        StringUtils.putCStr(buffer, destAddress.getAddr());
 
         buffer.put(esmClass)
                 .put(protocolId)
                 .put(priorityFlag);
 
-        ByteUtils.putCStr(buffer, scheduleDeliveryTime);
-        ByteUtils.putCStr(buffer, validityPeriod);
+        StringUtils.putCStr(buffer, scheduleDeliveryTime);
+        StringUtils.putCStr(buffer, validityPeriod);
 
         buffer.put(registeredDelivery);
         buffer.put((byte) 0x00); // replace_if_present_flag
@@ -170,11 +170,11 @@ public class SubmitSmPdu implements Pdu {
 
     private int calcLen(int smLen) {
         int len = 28; // sum of lens of fixed-sized fields
-        len += ByteUtils.cStrLen(serviceType);
-        len += ByteUtils.cStrLen(srcAddress.getAddr());
-        len += ByteUtils.cStrLen(destAddress.getAddr());
-        len += ByteUtils.cStrLen(scheduleDeliveryTime);
-        len += ByteUtils.cStrLen(validityPeriod);
+        len += StringUtils.cStrLen(serviceType);
+        len += StringUtils.cStrLen(srcAddress.getAddr());
+        len += StringUtils.cStrLen(destAddress.getAddr());
+        len += StringUtils.cStrLen(scheduleDeliveryTime);
+        len += StringUtils.cStrLen(validityPeriod);
         len += smLen;
         return len;
     }

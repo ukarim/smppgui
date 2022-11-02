@@ -44,6 +44,11 @@ public class EventDispatcher {
                 JOptionPane.showMessageDialog(null, msg, null, JOptionPane.ERROR_MESSAGE);
                 break;
             }
+            case SHOW_INFO: {
+                var msg = (String) eventAttach;
+                JOptionPane.showMessageDialog(null, msg, null, JOptionPane.INFORMATION_MESSAGE);
+                break;
+            }
             case DO_LOGIN: {
                 // Do login in background thread (blocking task)
                 workerThread.execute(() -> {
@@ -63,6 +68,11 @@ public class EventDispatcher {
             }
             case SHOW_LOGIN_FORM: {
                 formsPane.showLoginForm();
+                break;
+            }
+            case DO_SUBMIT: {
+                // Do submit in background thread (blocking task)
+                workerThread.execute(() -> smppHandler.submitMessage((SubmitModel) eventAttach));
                 break;
             }
             default: {

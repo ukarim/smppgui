@@ -7,4 +7,6 @@ public enum EventType {
     SHOW_SUBMIT_FORM,
     SHOW_LOGIN_FORM,
     SHOW_ERROR,
+    SHOW_INFO,
+    DO_SUBMIT,
 }

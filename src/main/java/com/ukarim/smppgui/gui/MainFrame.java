@@ -7,8 +7,11 @@ import javax.swing.JFrame;
 
 public class MainFrame extends JFrame {
 
+    public static final int WIDTH = 800;
+    public static final int HEIGHT = 600;
+
     public MainFrame() {
-        setSize(700, 600);
+        setSize(WIDTH, HEIGHT);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("SMPP GUI");

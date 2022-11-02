@@ -6,7 +6,7 @@ import com.ukarim.smppgui.protocol.pdu.DeliverSmPdu;
 import com.ukarim.smppgui.protocol.pdu.HeaderPdu;
 import com.ukarim.smppgui.protocol.pdu.Pdu;
 import com.ukarim.smppgui.protocol.pdu.SubmitSmRespPdu;
-import com.ukarim.smppgui.util.ByteUtils;
+import com.ukarim.smppgui.util.StringUtils;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -61,19 +61,19 @@ class PduParser {
             case BIND_TRANSCEIVER_RESP:
             case BIND_TRANSMITTER_RESP: {
                 var bindRespPdu = new BindRespPdu(cmd, sts, seqNum);
-                String systemId = ByteUtils.readCStr(buffer, cmdLen - 16);
+                String systemId = StringUtils.readCStr(buffer, cmdLen - 16);
                 bindRespPdu.setSystemId(systemId);
                 consumeRemainBytes(buffer, maxPos); // TODO parse possible TLVs
                 return bindRespPdu;
             }
             case SUBMIT_SM_RESP: {
                 var submitSmResp = new SubmitSmRespPdu(sts, seqNum);
-                String messageId = ByteUtils.readCStr(buffer, cmdLen - 16);
+                String messageId = StringUtils.readCStr(buffer, cmdLen - 16);
                 submitSmResp.setMessageId(messageId);
                 return submitSmResp;
             }
             case DELIVER_SM: {
-                String serviceType = ByteUtils.readCStr(buffer, cmdLen - 16);
+                String serviceType = StringUtils.readCStr(buffer, cmdLen - 16);
                 byte srcAddrTon = buffer.get();
                 byte srcAddrNpi = buffer.get();
                 String srcAddr = readCStr(buffer, maxPos);
@@ -114,7 +114,7 @@ class PduParser {
 
     private static String readCStr(ByteBuffer buffer, int maxPos) {
         int remainedBytes = maxPos - buffer.position();
-        return ByteUtils.readCStr(buffer, remainedBytes);
+        return StringUtils.readCStr(buffer, remainedBytes);
     }
 
     private static void consumeRemainBytes(ByteBuffer buffer, int maxPos) {

@@ -3,9 +3,9 @@ package com.ukarim.smppgui.util;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-public class ByteUtils {
+public class StringUtils {
 
-    private ByteUtils() {}
+    private StringUtils() {}
 
     public static void putCStr(ByteBuffer buffer, String s) {
         if (s != null) {
@@ -29,5 +29,9 @@ public class ByteUtils {
         // unnecessary garbage. fix later
         int len = s == null ? 0 : s.getBytes(StandardCharsets.US_ASCII).length;
         return len + 1; // + null terminator
+    }
+
+    public static boolean isEmpty(String s) {
+        return s == null || s.isBlank();
     }
 }

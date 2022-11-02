@@ -3,7 +3,7 @@ package com.ukarim.smppgui.protocol.pdu;
 import com.ukarim.smppgui.protocol.SmppCmd;
 import com.ukarim.smppgui.protocol.SmppConstants;
 import com.ukarim.smppgui.protocol.SmppStatus;
-import com.ukarim.smppgui.util.ByteUtils;
+import com.ukarim.smppgui.util.StringUtils;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -88,24 +88,24 @@ public class BindPdu implements Pdu {
                 .putInt(sts.getStatusId())
                 .putInt(seqNum);
 
-        ByteUtils.putCStr(buffer, systemId);
-        ByteUtils.putCStr(buffer, password);
-        ByteUtils.putCStr(buffer, systemType);
+        StringUtils.putCStr(buffer, systemId);
+        StringUtils.putCStr(buffer, password);
+        StringUtils.putCStr(buffer, systemType);
 
         buffer.put(SmppConstants.SMPP_34_INTERFACE_VER)
                 .put(ton)
                 .put(npi);
 
-        ByteUtils.putCStr(buffer, addrRange);
+        StringUtils.putCStr(buffer, addrRange);
         return buffer;
     }
 
     private int calcLen() {
         int len = 16 + 3; // header + 3 fields by 1 byte
         return len
-                + ByteUtils.cStrLen(systemId)
-                + ByteUtils.cStrLen(password)
-                + ByteUtils.cStrLen(systemType)
-                + ByteUtils.cStrLen(addrRange);
+                + StringUtils.cStrLen(systemId)
+                + StringUtils.cStrLen(password)
+                + StringUtils.cStrLen(systemType)
+                + StringUtils.cStrLen(addrRange);
     }
 }
