@@ -137,6 +137,9 @@ class LoginForm extends JPanel implements ActionListener {
 
         eventDispatcher.dispatch(EventType.DO_LOGIN,
                 new LoginModel(host, portNum, systemId, password, systemType));
+
+        // cleanup pwd
+        passwordField.setText("");
     }
 
     private void showError(String msg) {

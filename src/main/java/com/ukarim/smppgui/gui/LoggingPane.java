@@ -16,7 +16,7 @@ class LoggingPane extends JScrollPane {
     LoggingPane() {
         super();
         setBorder(new EmptyBorder(0, 0, 0, 0));
-        setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         setViewportView(textPane);
         textPane.setEditable(false);

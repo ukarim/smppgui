@@ -3,8 +3,6 @@ package com.ukarim.smppgui.gui;
 import com.ukarim.smppgui.protocol.pdu.Address;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -20,8 +18,8 @@ import static com.ukarim.smppgui.util.StringUtils.isEmpty;
 
 class SubmitForm extends JPanel implements ActionListener {
 
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyMMddHHmmss");
-    private static final int TIME_STR_LEN = 16;
+    private static final int VALID_TIME_LEN = 16;
+    private static final String VALID_TIME_REGEX = "[0-9][0-9][0-1][0-9][0-3][0-9][0-2][0-9][0-5][0-9][0-5][0-9][0-9][0-4][0-9](\\+|\\-|R)";
 
     private final EventDispatcher eventDispatcher;
 
@@ -62,6 +60,7 @@ class SubmitForm extends JPanel implements ActionListener {
         submitButton.addActionListener(this);
 
         shortMessageTextArea.setLineWrap(true);
+        shortMessageTextArea.setRows(3);
 
         var components = Arrays.asList(
                 new Pair(disconnectButton, null),
@@ -212,6 +211,7 @@ class SubmitForm extends JPanel implements ActionListener {
         String schedDeliverTime = null;
         String schedDeliverTimeText = schedDeliveryTimeField.getText();
         if (!isEmpty(schedDeliverTimeText)) {
+            schedDeliverTimeText = schedDeliverTimeText.trim();
             if (!isValidSmppTime(schedDeliverTimeText)) {
                 showError("Invalid 'sched_deliver_time' provided");
                 return;
@@ -222,6 +222,7 @@ class SubmitForm extends JPanel implements ActionListener {
         String validityPeriod = null;
         String validityPeriodText = validityPeriodField.getText();
         if (!isEmpty(validityPeriodText)) {
+            validityPeriodText = validityPeriodText.trim();
             if (!isValidSmppTime(validityPeriodText)) {
                 showError("Invalid 'validity_period' provided");
                 return;
@@ -230,9 +231,9 @@ class SubmitForm extends JPanel implements ActionListener {
         }
 
         var submitModel = new SubmitModel(
-                new Address(srcAddrTon, srcAddrNpi, srcAddr),
-                new Address(destAddrTon, destAddrNpi, destAddr),
-                shortMessage
+                new Address(srcAddrTon, srcAddrNpi, srcAddr.trim()),
+                new Address(destAddrTon, destAddrNpi, destAddr.trim()),
+                shortMessage.trim()
         );
         submitModel.setRegisteredDelivery(registeredDelivery);
         submitModel.setProtocolId(protocolId);
@@ -249,17 +250,10 @@ class SubmitForm extends JPanel implements ActionListener {
     }
 
     private boolean isValidSmppTime(String s) {
-        // YYMMDDhhmmsstnnp
-        try {
-            if (s.length() != TIME_STR_LEN) {
-                return false;
-            }
-            LocalDateTime.parse(s.substring(0, 12), TIME_FORMATTER);
-            String tail = s.substring(12);
-            return tail.matches("[0-9][0-4][0-9](\\+|\\-|R)");
-        } catch (Exception e) {
+        if (s.length() != VALID_TIME_LEN) {
             return false;
         }
+        return s.matches(VALID_TIME_REGEX);
     }
 
     private static class Pair {
