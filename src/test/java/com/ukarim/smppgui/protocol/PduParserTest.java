@@ -138,7 +138,7 @@ class PduParserTest {
         Assertions.assertEquals("", deliverSmPdu.getScheduleDeliveryTime());
         Assertions.assertEquals("", deliverSmPdu.getValidityPeriod());
         Assertions.assertEquals(0, deliverSmPdu.getRegisteredDelivery());
-        Assertions.assertEquals("Test", deliverSmPdu.getShortMessage());
+        Assertions.assertArrayEquals(new byte[]{ 0x54, 0x65, 0x73, 0x74 }, deliverSmPdu.getShortMessage());
 
         Assertions.assertFalse(buffer.hasRemaining());
     }

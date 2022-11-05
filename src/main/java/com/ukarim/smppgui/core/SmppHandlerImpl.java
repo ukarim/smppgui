@@ -6,6 +6,7 @@ import com.ukarim.smppgui.gui.LoginModel;
 import com.ukarim.smppgui.gui.SubmitModel;
 import com.ukarim.smppgui.protocol.SmppClient;
 import com.ukarim.smppgui.protocol.SmppCmd;
+import com.ukarim.smppgui.protocol.SmppConstants;
 import com.ukarim.smppgui.protocol.SmppHandler;
 import com.ukarim.smppgui.protocol.SmppStatus;
 import com.ukarim.smppgui.protocol.pdu.BindPdu;
@@ -15,12 +16,17 @@ import com.ukarim.smppgui.protocol.pdu.HeaderPdu;
 import com.ukarim.smppgui.protocol.pdu.Pdu;
 import com.ukarim.smppgui.protocol.pdu.SubmitSmPdu;
 import com.ukarim.smppgui.util.FmtUtils;
+import com.ukarim.smppgui.util.SmppUtils;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SmppHandlerImpl implements SmppHandler {
+
+    private static final int MAX_SHORT_MSG_LEN = 70;
 
     private final long TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
@@ -119,25 +125,52 @@ public class SmppHandlerImpl implements SmppHandler {
 
     public void submitMessage(SubmitModel submitModel) {
         try {
-            var submitSmPdu = new SubmitSmPdu(
-                    nextSeqNum(),
-                    submitModel.getSrcAddress(),
-                    submitModel.getDestAddress(),
-                    submitModel.getShortMessage()
-            );
-            submitSmPdu.setServiceType(submitModel.getServiceType());
-            submitSmPdu.setRegisteredDelivery(submitModel.getRegisteredDelivery());
-            submitSmPdu.setProtocolId(submitModel.getProtocolId());
-            submitSmPdu.setPriorityFlag(submitModel.getPriorityFlag());
-            submitSmPdu.setScheduleDeliveryTime(submitModel.getSchedDeliverTime());
-            submitSmPdu.setValidityPeriod(submitModel.getValidityPeriod());
+            String shortMessage = submitModel.getShortMessage();
+            List<SubmitSmPdu> pduList = new ArrayList<>();
+            if (shortMessage.length() > MAX_SHORT_MSG_LEN) {
+                List<byte[]> udhParts = SmppUtils.toUdhPartsInUcs2(shortMessage);
+                for (byte[] p : udhParts) {
+                    var submitSmPdu = new SubmitSmPdu(
+                            nextSeqNum(),
+                            submitModel.getSrcAddress(),
+                            submitModel.getDestAddress(),
+                            p,
+                            SmppConstants.DATA_CODING_UCS2
+                    );
+                    setSubmitSmOptionalFields(submitSmPdu, submitModel);
+                    submitSmPdu.setEsmClass(SmppConstants.ESM_UDH_MASK);
+                    pduList.add(submitSmPdu);
+                }
+            } else {
+                var submitSmPdu = new SubmitSmPdu(
+                        nextSeqNum(),
+                        submitModel.getSrcAddress(),
+                        submitModel.getDestAddress(),
+                        SmppUtils.toUcs2Bytes(shortMessage),
+                        SmppConstants.DATA_CODING_UCS2
+                );
+                setSubmitSmOptionalFields(submitSmPdu, submitModel);
+                submitSmPdu.setEsmClass(SmppConstants.ESM_DEFAULT);
+                pduList.add(submitSmPdu);
+            }
 
-            smppClient.sendPdu(submitSmPdu);
-            printMsg("Pdu sent:\n%s", FmtUtils.fmtPdu(submitSmPdu));
+            for (var submitSmPdu : pduList) {
+                smppClient.sendPdu(submitSmPdu);
+                printMsg("Pdu sent:\n%s", FmtUtils.fmtPdu(submitSmPdu));
+            }
             showInfoDialog("Short message was sent");
         } catch (Exception e) {
             showErrorDialog("Submit error: %s", e.getMessage());
         }
+    }
+
+    private void setSubmitSmOptionalFields(SubmitSmPdu submitSmPdu, SubmitModel submitModel) {
+        submitSmPdu.setServiceType(submitModel.getServiceType());
+        submitSmPdu.setRegisteredDelivery(submitModel.getRegisteredDelivery());
+        submitSmPdu.setProtocolId(submitModel.getProtocolId());
+        submitSmPdu.setPriorityFlag(submitModel.getPriorityFlag());
+        submitSmPdu.setScheduleDeliveryTime(submitModel.getSchedDeliverTime());
+        submitSmPdu.setValidityPeriod(submitModel.getValidityPeriod());
     }
 
     private void printMsg(String fmt, Object... args) {

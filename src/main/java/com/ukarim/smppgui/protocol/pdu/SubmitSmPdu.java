@@ -1,12 +1,10 @@
 package com.ukarim.smppgui.protocol.pdu;
 
 import com.ukarim.smppgui.protocol.SmppCmd;
-import com.ukarim.smppgui.protocol.SmppConstants;
 import com.ukarim.smppgui.protocol.SmppStatus;
 import com.ukarim.smppgui.util.StringUtils;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 
 public class SubmitSmPdu implements Pdu {
 
@@ -20,7 +18,7 @@ public class SubmitSmPdu implements Pdu {
 
     private String serviceType;
 
-    private final byte esmClass = (byte) 0x00;
+    private byte esmClass;
 
     private byte protocolId;
 
@@ -32,15 +30,16 @@ public class SubmitSmPdu implements Pdu {
 
     private byte registeredDelivery;
 
-    private final byte dataCoding = SmppConstants.DATA_CODING_UCS2;
+    private final byte dataCoding;
 
-    private final String shortMessage;
+    private final byte[] shortMessage;
 
-    public SubmitSmPdu(int seqNum, Address srcAddress, Address destAddress, String shortMessage) {
+    public SubmitSmPdu(int seqNum, Address srcAddress, Address destAddress, byte[] shortMessage, byte dataCoding) {
         this.seqNum = seqNum;
         this.srcAddress = srcAddress;
         this.destAddress = destAddress;
         this.shortMessage = shortMessage;
+        this.dataCoding = dataCoding;
     }
 
     public Address getSrcAddress() {
@@ -51,7 +50,7 @@ public class SubmitSmPdu implements Pdu {
         return destAddress;
     }
 
-    public String getShortMessage() {
+    public byte[] getShortMessage() {
         return shortMessage;
     }
 
@@ -65,6 +64,10 @@ public class SubmitSmPdu implements Pdu {
 
     public byte getEsmClass() {
         return esmClass;
+    }
+
+    public void setEsmClass(byte esmClass) {
+        this.esmClass = esmClass;
     }
 
     public byte getProtocolId() {
@@ -128,10 +131,7 @@ public class SubmitSmPdu implements Pdu {
 
     @Override
     public ByteBuffer toByteBuffer() {
-        byte[] shortMessageBytes = shortMessage.getBytes(StandardCharsets.UTF_16BE);
-        int smLen = shortMessageBytes.length;
-
-        int cmdLen = calcLen(smLen);
+        int cmdLen = calcLen();
         var buffer = ByteBuffer.allocate(cmdLen);
         buffer.order(ByteOrder.BIG_ENDIAN); // according to SMPP spec
 
@@ -162,20 +162,21 @@ public class SubmitSmPdu implements Pdu {
         buffer.put(dataCoding);
         buffer.put((byte) 0x00); // sm_default_msg_id
 
+        int smLen = shortMessage.length;
         buffer.put((byte) smLen);
-        buffer.put(shortMessageBytes, 0, smLen);
+        buffer.put(shortMessage, 0, smLen);
 
         return buffer;
     }
 
-    private int calcLen(int smLen) {
+    private int calcLen() {
         int len = 28; // sum of lens of fixed-sized fields
         len += StringUtils.cStrLen(serviceType);
         len += StringUtils.cStrLen(srcAddress.getAddr());
         len += StringUtils.cStrLen(destAddress.getAddr());
         len += StringUtils.cStrLen(scheduleDeliveryTime);
         len += StringUtils.cStrLen(validityPeriod);
-        len += smLen;
+        len += shortMessage.length;
         return len;
     }
 }

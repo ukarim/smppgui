@@ -2,7 +2,7 @@
 
 ### smppgui
 
-Zero dependency SMPP GUI client (Work in progress)
+Zero dependency SMPP GUI client
 
 ### Usage
 

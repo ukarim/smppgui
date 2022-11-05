@@ -1,6 +1,7 @@
 package com.ukarim.smppgui.gui;
 
 import com.ukarim.smppgui.protocol.pdu.Address;
+import com.ukarim.smppgui.util.SmppUtils;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -17,9 +18,6 @@ import javax.swing.border.EmptyBorder;
 import static com.ukarim.smppgui.util.StringUtils.isEmpty;
 
 class SubmitForm extends JPanel implements ActionListener {
-
-    private static final int VALID_TIME_LEN = 16;
-    private static final String VALID_TIME_REGEX = "[0-9][0-9][0-1][0-9][0-3][0-9][0-2][0-9][0-5][0-9][0-5][0-9][0-9][0-4][0-9](\\+|\\-|R)";
 
     private final EventDispatcher eventDispatcher;
 
@@ -212,7 +210,7 @@ class SubmitForm extends JPanel implements ActionListener {
         String schedDeliverTimeText = schedDeliveryTimeField.getText();
         if (!isEmpty(schedDeliverTimeText)) {
             schedDeliverTimeText = schedDeliverTimeText.trim();
-            if (!isValidSmppTime(schedDeliverTimeText)) {
+            if (!SmppUtils.isValidSmppTime(schedDeliverTimeText)) {
                 showError("Invalid 'sched_deliver_time' provided");
                 return;
             }
@@ -223,7 +221,7 @@ class SubmitForm extends JPanel implements ActionListener {
         String validityPeriodText = validityPeriodField.getText();
         if (!isEmpty(validityPeriodText)) {
             validityPeriodText = validityPeriodText.trim();
-            if (!isValidSmppTime(validityPeriodText)) {
+            if (!SmppUtils.isValidSmppTime(validityPeriodText)) {
                 showError("Invalid 'validity_period' provided");
                 return;
             }
@@ -247,13 +245,6 @@ class SubmitForm extends JPanel implements ActionListener {
 
     private void showError(String fmt, Object... args) {
         eventDispatcher.dispatch(EventType.SHOW_ERROR, String.format(fmt, args));
-    }
-
-    private boolean isValidSmppTime(String s) {
-        if (s.length() != VALID_TIME_LEN) {
-            return false;
-        }
-        return s.matches(VALID_TIME_REGEX);
     }
 
     private static class Pair {

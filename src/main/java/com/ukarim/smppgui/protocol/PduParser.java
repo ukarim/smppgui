@@ -9,8 +9,6 @@ import com.ukarim.smppgui.protocol.pdu.SubmitSmRespPdu;
 import com.ukarim.smppgui.util.StringUtils;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -86,19 +84,24 @@ class PduParser {
                 String schedDeliveryTime = readCStr(buffer, maxPos);
                 String validityPeriod = readCStr(buffer, maxPos);
                 byte regDelivery = buffer.get();
-                byte replaceIfPresent = buffer.get();
+                byte replaceIfPresent = buffer.get(); // do not remove
                 byte dataCoding = buffer.get();
-                byte smDefMsgId = buffer.get();
+                byte smDefMsgId = buffer.get();  // do not remove
                 byte smLen = buffer.get();
-                String shortMsg = readStr(buffer, smLen, dataCoding);
+
+                int pos = buffer.position();
+                byte[] shortMsg = Arrays.copyOfRange(buffer.array(), pos, pos + smLen);
+
                 consumeRemainBytes(buffer, maxPos); // TODO parse possible TLVs
                 var deliverSm = new DeliverSmPdu(
                         seqNum,
                         new Address(srcAddrTon, srcAddrNpi, srcAddr),
                         new Address(destTon, destNpi, destAddr),
-                        shortMsg
+                        shortMsg,
+                        dataCoding
                 );
                 deliverSm.setServiceType(serviceType);
+                deliverSm.setEsmClass(esmClass);
                 deliverSm.setProtocolId(protocolId);
                 deliverSm.setPriorityFlag(priorityFlag);
                 deliverSm.setScheduleDeliveryTime(schedDeliveryTime);
@@ -123,14 +126,5 @@ class PduParser {
 
     private static boolean hasBytes(Buffer buffer, int n) {
         return (buffer.limit() - buffer.position()) >= n;
-    }
-
-    public static String readStr(ByteBuffer buffer, int len, byte coding) {
-        int pos = buffer.position();
-        Charset charset = coding == SmppConstants.DATA_CODING_UCS2
-                ? StandardCharsets.UTF_16BE
-                : StandardCharsets.US_ASCII;
-        byte[] bytes = Arrays.copyOfRange(buffer.array(), pos, pos + len);
-        return new String(bytes, charset);
     }
 }
