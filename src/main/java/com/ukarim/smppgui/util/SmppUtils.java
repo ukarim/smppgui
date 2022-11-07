@@ -29,8 +29,8 @@ public final class SmppUtils {
         if (s == null) {
             return Collections.emptyList();
         }
-        int len = s.length();
-        int count = (int) Math.ceil(len / UDH_MAX_CONTENT_LENGTH);
+        int len = s.length() * 2; // multiple 2 due ucs2 encoding
+        int count = (int) Math.ceil(((double) len)/ UDH_MAX_CONTENT_LENGTH);
         var partsList = new ArrayList<byte[]>(count);
 
         byte[] bytes = toUcs2Bytes(s);
@@ -44,7 +44,7 @@ public final class SmppUtils {
             udhPart[2] = 0x03;
             udhPart[3] = 0x01; // maybe accept id as method argument?
             udhPart[4] = (byte) count;
-            udhPart[5] = (byte) i;
+            udhPart[5] = (byte) (i + 1);
             System.arraycopy(bytes, startIdx, udhPart, 6, partLen);
             partsList.add(udhPart);
         }
