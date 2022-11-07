@@ -3,6 +3,7 @@ package com.ukarim.smppgui.core;
 import com.ukarim.smppgui.gui.EventDispatcher;
 import com.ukarim.smppgui.gui.EventType;
 import com.ukarim.smppgui.gui.LoginModel;
+import com.ukarim.smppgui.gui.LoginModel.SessionType;
 import com.ukarim.smppgui.gui.SubmitModel;
 import com.ukarim.smppgui.protocol.SmppClient;
 import com.ukarim.smppgui.protocol.SmppCmd;
@@ -79,14 +80,24 @@ public class SmppHandlerImpl implements SmppHandler {
         int port = loginModel.getPort();
         String systemId = loginModel.getSystemId();
         String password = new String(loginModel.getPassword());
+        SessionType sessionType = loginModel.getSessionType();
         String systemType = loginModel.getSystemType();
 
         try {
             // establish tcp connection
             smppClient.connect(host, port);
 
+            SmppCmd cmd;
+            if (SessionType.RECEIVER.equals(sessionType)) {
+                cmd = SmppCmd.BIND_RECEIVER;
+            } else if (SessionType.TRANSCEIVER.equals(sessionType)) {
+                cmd = SmppCmd.BIND_TRANSCEIVER;
+            } else {
+                cmd = SmppCmd.BIND_TRANSMITTER;
+            }
+
             int seqNum = nextSeqNum();
-            BindPdu bindReq = new BindPdu(SmppCmd.BIND_TRANSMITTER, seqNum, systemId, password);
+            BindPdu bindReq = new BindPdu(cmd, seqNum, systemId, password);
             bindReq.setSystemType(systemType);
 
             // send bind request

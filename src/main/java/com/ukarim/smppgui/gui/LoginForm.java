@@ -1,5 +1,6 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.gui.LoginModel.SessionType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.GroupLayout;
@@ -8,7 +9,9 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerListModel;
 import javax.swing.border.EmptyBorder;
 
 class LoginForm extends JPanel implements ActionListener {
@@ -21,6 +24,7 @@ class LoginForm extends JPanel implements ActionListener {
     private final JPasswordField passwordField;
     private final JTextField systemTypeField;
     private final JButton button;
+    private final JSpinner sessionTypeSpinner;
 
     LoginForm(EventDispatcher eventDispatcher) {
         this.eventDispatcher = eventDispatcher;
@@ -43,6 +47,16 @@ class LoginForm extends JPanel implements ActionListener {
         var passwordLabel = new JLabel("Password: ");
         passwordField = new JPasswordField();
 
+        var sessionTypeLabel = new JLabel("Session type");
+        var spinnerModel = new SpinnerListModel(SessionType.values());
+        spinnerModel.setValue(SessionType.TRANSMITTER); // set initial value
+        sessionTypeSpinner = new JSpinner(spinnerModel);
+
+        // make spinner not editable
+        var spinnerEditor = new JSpinner.DefaultEditor(sessionTypeSpinner);
+        spinnerEditor.getTextField().setEditable(false);
+        sessionTypeSpinner.setEditor(spinnerEditor);
+
         var serviceTypeLabel = new JLabel("System type: ");
         systemTypeField = new JTextField();
 
@@ -55,6 +69,7 @@ class LoginForm extends JPanel implements ActionListener {
                         .addComponent(portLabel)
                         .addComponent(systemIdLabel)
                         .addComponent(passwordLabel)
+                        .addComponent(sessionTypeLabel)
                         .addComponent(serviceTypeLabel)
                 )
                 .addGroup(layout.createParallelGroup(Alignment.LEADING)
@@ -62,6 +77,7 @@ class LoginForm extends JPanel implements ActionListener {
                         .addComponent(portField)
                         .addComponent(systemIdField)
                         .addComponent(passwordField)
+                        .addComponent(sessionTypeSpinner)
                         .addComponent(systemTypeField)
                         .addComponent(button)
                 )
@@ -83,6 +99,10 @@ class LoginForm extends JPanel implements ActionListener {
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(passwordLabel)
                         .addComponent(passwordField)
+                )
+                .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(sessionTypeLabel)
+                        .addComponent(sessionTypeSpinner)
                 )
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(serviceTypeLabel)
@@ -133,10 +153,12 @@ class LoginForm extends JPanel implements ActionListener {
             return;
         }
 
+        var sessionType = (LoginModel.SessionType) sessionTypeSpinner.getModel().getValue();
+
         String systemType = systemTypeField.getText();
 
         eventDispatcher.dispatch(EventType.DO_LOGIN,
-                new LoginModel(host, portNum, systemId, password, systemType));
+                new LoginModel(host, portNum, systemId, password, sessionType, systemType));
 
         // cleanup pwd
         passwordField.setText("");
