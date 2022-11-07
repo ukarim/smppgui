@@ -1,15 +1,21 @@
 package com.ukarim.smppgui.util;
 
+import static com.ukarim.smppgui.protocol.SmppConstants.DATA_CODING_LATIN1;
+import static com.ukarim.smppgui.protocol.SmppConstants.DATA_CODING_UCS2;
+
 import com.ukarim.smppgui.protocol.SmppCmd;
 import com.ukarim.smppgui.protocol.SmppConstants;
 import com.ukarim.smppgui.protocol.SmppStatus;
+import com.ukarim.smppgui.protocol.Tlv;
 import com.ukarim.smppgui.protocol.pdu.BindPdu;
 import com.ukarim.smppgui.protocol.pdu.BindRespPdu;
 import com.ukarim.smppgui.protocol.pdu.DeliverSmRespPdu;
 import com.ukarim.smppgui.protocol.pdu.Pdu;
 import com.ukarim.smppgui.protocol.pdu.SubmitSmPdu;
 import com.ukarim.smppgui.protocol.pdu.SubmitSmRespPdu;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public final class FmtUtils {
 
@@ -36,6 +42,12 @@ public final class FmtUtils {
         byte b2 = (byte) (n >> 8);
         byte b1 = (byte) (n >> 0);
         return "0x" + toHexString(b4, b3, b2, b1);
+    }
+
+    public static String fmtShort(short n) {
+        byte b2 = (byte) (n >> 8);
+        byte b1 = (byte) (n >> 0);
+        return "0x" + toHexString(b2, b1);
     }
 
     public static String fmtByte(byte n) {
@@ -70,6 +82,7 @@ public final class FmtUtils {
         if (pdu instanceof BindRespPdu) {
             var bindRespPdu = (BindRespPdu) pdu;
             builder.append("[system_id]: ").append(bindRespPdu.getSystemId());
+            fmtTlvs(bindRespPdu.getTlvs(), builder);
         }
 
         if (pdu instanceof SubmitSmRespPdu) {
@@ -108,16 +121,46 @@ public final class FmtUtils {
             if (containsUdh) {
                 shortMsgStr = "hex(" + toHexString(shortMsg) + ")";
             } else {
-                var charset = SmppConstants.DATA_CODING_UCS2 == submitSm.getDataCoding()
-                        ? StandardCharsets.UTF_16BE
-                        : StandardCharsets.US_ASCII;
-                shortMsgStr = new String(shortMsg, charset);
+                shortMsgStr = decodeStr(shortMsg, submitSm.getDataCoding());
             }
             builder.append("[short_message]: ").append(shortMsgStr);
+            fmtTlvs(submitSm.getTlvs(), builder);
         }
 
         return builder.toString();
     }
 
+    private static void fmtTlvs(List<Tlv> tlvList, StringBuilder builder) {
+        tlvList.forEach(tlv -> {
+            String name = tlv.getName();
+            byte[] value = tlv.getValue();
+            if (name == null) {
+                name = "tlv(" + FmtUtils.fmtShort(tlv.getTag()) + ")";
+            }
+            builder.append("\n")
+                    .append("[").append(name).append("]: ")
+                    .append("hex(").append(FmtUtils.toHexString(value)).append(")");
+        });
+    }
 
+    private static String decodeStr(byte[] bytes, byte dataCoding) {
+        Charset charset;
+        switch (dataCoding) {
+            case DATA_CODING_UCS2:
+                charset = StandardCharsets.UTF_16BE;
+                break;
+            case DATA_CODING_LATIN1:
+                charset = StandardCharsets.ISO_8859_1;
+                break;
+            default:
+                charset = StandardCharsets.US_ASCII;
+        }
+        String output;
+        try {
+            output = new String(bytes, charset);
+        } catch (Exception e) {
+            output = "hex(" + toHexString(bytes) + ")";
+        }
+        return output;
+    }
 }

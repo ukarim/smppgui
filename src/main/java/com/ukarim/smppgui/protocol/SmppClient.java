@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.SocketChannel;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -94,7 +95,15 @@ public final class SmppClient {
                         continue;
                     }
 
-                    for (Pdu pdu : PduParser.parsePdu(buffer)) {
+                    List<Pdu> pdus;
+                    try {
+                         pdus = PduParser.parsePdu(buffer);
+                    } catch (Exception e) {
+                        smppHandler.handlePdu(null, new SmppException("Pdu parsing error", e));
+                        continue;
+                    }
+
+                    for (Pdu pdu : pdus) {
                         var syncRespFuture = syncRespFutures.remove(pdu.getSeqNum());
                         if (syncRespFuture != null) {
                             syncRespFuture.complete(pdu);
@@ -105,14 +114,14 @@ public final class SmppClient {
                             }
                         }
                     }
-
-                    buffer.compact(); // move unread bytes to the begging of array
                 } catch (Exception e) {
                     if (e instanceof AsynchronousCloseException) {
                         // NOOP. Channel was closed by `disconnect` method invocation
-                        return;
+                        continue;
                     }
                     smppHandler.handlePdu(null, e);
+                } finally {
+                    buffer.compact(); // move unread bytes to the begging of array
                 }
             }
         }

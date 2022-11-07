@@ -10,7 +10,7 @@ import com.ukarim.smppgui.util.StringUtils;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 class PduParser {
@@ -61,7 +61,9 @@ class PduParser {
                 var bindRespPdu = new BindRespPdu(cmd, sts, seqNum);
                 String systemId = StringUtils.readCStr(buffer, cmdLen - 16);
                 bindRespPdu.setSystemId(systemId);
-                consumeRemainBytes(buffer, maxPos); // TODO parse possible TLVs
+                List<Tlv> tlvs = parseTlvs(buffer);
+                bindRespPdu.setTlvs(tlvs);
+                consumeRemainBytes(buffer, maxPos); // Consume remaining. Actually must be dead code
                 return bindRespPdu;
             }
             case SUBMIT_SM_RESP: {
@@ -89,10 +91,11 @@ class PduParser {
                 byte smDefMsgId = buffer.get();  // do not remove
                 byte smLen = buffer.get();
 
-                int pos = buffer.position();
-                byte[] shortMsg = Arrays.copyOfRange(buffer.array(), pos, pos + smLen);
+                byte[] shortMsg = new byte[smLen];
+                copyToByteArr(buffer, shortMsg);
 
-                consumeRemainBytes(buffer, maxPos); // TODO parse possible TLVs
+                List<Tlv> tlvs = parseTlvs(buffer);
+                consumeRemainBytes(buffer, maxPos); // Consume remaining. Actually must be dead code
                 var deliverSm = new DeliverSmPdu(
                         seqNum,
                         new Address(srcAddrTon, srcAddrNpi, srcAddr),
@@ -107,12 +110,28 @@ class PduParser {
                 deliverSm.setScheduleDeliveryTime(schedDeliveryTime);
                 deliverSm.setValidityPeriod(validityPeriod);
                 deliverSm.setRegisteredDelivery(regDelivery);
+                deliverSm.setTlvs(tlvs);
                 return deliverSm;
             }
             default:
                 // pdus unsupported on client side
                 throw new SmppException("Parsing for PDU '%s' not implemented", cmd);
         }
+    }
+
+    private static List<Tlv> parseTlvs(ByteBuffer buffer) {
+        if (!buffer.hasRemaining()) {
+            return Collections.emptyList();
+        }
+        var tlvs = new ArrayList<Tlv>();
+        while (buffer.hasRemaining()) {
+            short tag = buffer.getShort();
+            short len = buffer.getShort();
+            byte[] value = new byte[len];
+            copyToByteArr(buffer, value);
+            tlvs.add(new Tlv(tag, len, value));
+        }
+        return tlvs;
     }
 
     private static String readCStr(ByteBuffer buffer, int maxPos) {
@@ -126,5 +145,11 @@ class PduParser {
 
     private static boolean hasBytes(Buffer buffer, int n) {
         return (buffer.limit() - buffer.position()) >= n;
+    }
+
+    private static void copyToByteArr(ByteBuffer buffer, byte[] arr) {
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = buffer.get();
+        }
     }
 }

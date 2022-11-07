@@ -2,9 +2,12 @@ package com.ukarim.smppgui.protocol.pdu;
 
 import com.ukarim.smppgui.protocol.SmppCmd;
 import com.ukarim.smppgui.protocol.SmppStatus;
+import com.ukarim.smppgui.protocol.Tlv;
 import com.ukarim.smppgui.util.StringUtils;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collections;
+import java.util.List;
 
 public class SubmitSmPdu implements Pdu {
 
@@ -33,6 +36,8 @@ public class SubmitSmPdu implements Pdu {
     private final byte dataCoding;
 
     private final byte[] shortMessage;
+
+    private List<Tlv> tlvs = Collections.emptyList();
 
     public SubmitSmPdu(int seqNum, Address srcAddress, Address destAddress, byte[] shortMessage, byte dataCoding) {
         this.seqNum = seqNum;
@@ -114,6 +119,14 @@ public class SubmitSmPdu implements Pdu {
         return dataCoding;
     }
 
+    public List<Tlv> getTlvs() {
+        return tlvs;
+    }
+
+    public void setTlvs(List<Tlv> tlvs) {
+        this.tlvs = tlvs;
+    }
+
     @Override
     public SmppCmd getCmd() {
         return SmppCmd.SUBMIT_SM;
@@ -166,6 +179,13 @@ public class SubmitSmPdu implements Pdu {
         buffer.put((byte) smLen);
         buffer.put(shortMessage, 0, smLen);
 
+        for (var tlv : tlvs) {
+            short tlvLen = tlv.getLen();
+            buffer.putShort(tlv.getTag())
+                    .putShort(tlvLen)
+                    .put(tlv.getValue(), 0, tlvLen);
+        }
+
         return buffer;
     }
 
@@ -177,6 +197,9 @@ public class SubmitSmPdu implements Pdu {
         len += StringUtils.cStrLen(scheduleDeliveryTime);
         len += StringUtils.cStrLen(validityPeriod);
         len += shortMessage.length;
+        for (var tlv : tlvs) {
+            len += tlv.getLen();
+        }
         return len;
     }
 }

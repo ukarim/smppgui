@@ -2,7 +2,10 @@ package com.ukarim.smppgui.protocol.pdu;
 
 import com.ukarim.smppgui.protocol.SmppCmd;
 import com.ukarim.smppgui.protocol.SmppStatus;
+import com.ukarim.smppgui.protocol.Tlv;
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.List;
 
 public class BindRespPdu implements Pdu {
 
@@ -10,6 +13,7 @@ public class BindRespPdu implements Pdu {
     private final SmppStatus sts;
     private final int seqNum;
     private String systemId;
+    private List<Tlv> tlvs = Collections.emptyList();
 
     public BindRespPdu(SmppCmd cmd, SmppStatus sts, int seqNum) {
         this.cmd = cmd;
@@ -23,6 +27,14 @@ public class BindRespPdu implements Pdu {
 
     public void setSystemId(String systemId) {
         this.systemId = systemId;
+    }
+
+    public List<Tlv> getTlvs() {
+        return tlvs;
+    }
+
+    public void setTlvs(List<Tlv> tlvs) {
+        this.tlvs = tlvs;
     }
 
     @Override
