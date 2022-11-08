@@ -2,16 +2,16 @@
 
 ### smppgui
 
-Zero dependency SMPP GUI client
+Simple SMPP GUI client written in java. No external dependencies. Works on Linux and Windows (should work on MacOS, not tested).
 
 ### Usage
 
-To build and run smppgui you will need gradle and java11.
+You will need java 11 or higher preinstalled on your machine.
 
-```
-gradle clean build
-java -jar build/libs/smppgui.jar
-```
+1. Download smppgui.jar from [https://github.com/ukarim/smppgui/releases](https://github.com/ukarim/smppgui/releases)
+or build it manually using gradle: `gradle build`
+
+2. Launch smppgui using following command: `java -jar smppgui.jar`
 
 ### Screenshot
 
