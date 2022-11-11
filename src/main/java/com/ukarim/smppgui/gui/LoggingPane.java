@@ -7,7 +7,7 @@ import javax.swing.border.EmptyBorder;
 
 class LoggingPane extends JScrollPane {
 
-    private static final int MAX_MSG_COUNT = 20; // preserve only last 20 messages
+    private static final int MAX_MSG_COUNT = 50; // preserve only last 50 messages
 
     private final LinkedList<String> messages = new LinkedList<>();
 

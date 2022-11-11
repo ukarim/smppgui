@@ -61,7 +61,7 @@ class PduParser {
                 var bindRespPdu = new BindRespPdu(cmd, sts, seqNum);
                 String systemId = StringUtils.readCStr(buffer, cmdLen - 16);
                 bindRespPdu.setSystemId(systemId);
-                List<Tlv> tlvs = parseTlvs(buffer);
+                List<Tlv> tlvs = parseTlvs(buffer, maxPos);
                 bindRespPdu.setTlvs(tlvs);
                 consumeRemainBytes(buffer, maxPos); // Consume remaining. Actually must be dead code
                 return bindRespPdu;
@@ -94,7 +94,7 @@ class PduParser {
                 byte[] shortMsg = new byte[smLen];
                 copyToByteArr(buffer, shortMsg);
 
-                List<Tlv> tlvs = parseTlvs(buffer);
+                List<Tlv> tlvs = parseTlvs(buffer, maxPos);
                 consumeRemainBytes(buffer, maxPos); // Consume remaining. Actually must be dead code
                 var deliverSm = new DeliverSmPdu(
                         seqNum,
@@ -115,16 +115,17 @@ class PduParser {
             }
             default:
                 // pdus unsupported on client side
+                consumeRemainBytes(buffer, maxPos);
                 throw new SmppException("Parsing for PDU '%s' not implemented", cmd);
         }
     }
 
-    private static List<Tlv> parseTlvs(ByteBuffer buffer) {
+    private static List<Tlv> parseTlvs(ByteBuffer buffer, int maxPos) {
         if (!buffer.hasRemaining()) {
             return Collections.emptyList();
         }
         var tlvs = new ArrayList<Tlv>();
-        while (buffer.hasRemaining()) {
+        while (buffer.position() < maxPos) {
             short tag = buffer.getShort();
             short len = buffer.getShort();
             byte[] value = new byte[len];
