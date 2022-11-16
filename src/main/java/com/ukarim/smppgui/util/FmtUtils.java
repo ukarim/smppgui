@@ -15,15 +15,68 @@ import com.ukarim.smppgui.protocol.pdu.SubmitSmPdu;
 import com.ukarim.smppgui.protocol.pdu.SubmitSmRespPdu;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 public final class FmtUtils {
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
+    private static final Map<Short, Tuple2<String, Function<byte[], String>>> KNOWN_TLVS;
+
+    static {
+        KNOWN_TLVS = new HashMap<>();
+        KNOWN_TLVS.put((short) 0x0005, Tuple2.of("dest_addr_subunit", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0006, Tuple2.of("dest_network_type", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0007, Tuple2.of("dest_bearer_type", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0008, Tuple2.of("dest_telematics_id", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x000D, Tuple2.of("source_addr_subunit", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x000E, Tuple2.of("source_network_type", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x000F, Tuple2.of("source_bearer_type", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0010, Tuple2.of("source_telematics_id", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0017, Tuple2.of("qos_time_to_live", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0019, Tuple2.of("payload_type", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x001D, Tuple2.of("additional_status_info_text", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x001E, Tuple2.of("receipted_message_id", FmtUtils::fmtCStr));
+        KNOWN_TLVS.put((short) 0x0030, Tuple2.of("ms_msg_wait_facilities", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0201, Tuple2.of("privacy_indicator", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0202, Tuple2.of("source_subaddress", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0203, Tuple2.of("dest_subaddress", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0204, Tuple2.of("user_message_reference", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0205, Tuple2.of("user_response_code", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x020A, Tuple2.of("source_port", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x020B, Tuple2.of("destination_port", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x020C, Tuple2.of("sar_msg_ref_num", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x020D, Tuple2.of("language_indicator", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x020E, Tuple2.of("sar_total_segments", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x020F, Tuple2.of("sar_segment_seqnum", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0210, Tuple2.of("SC_interface_version", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0302, Tuple2.of("callback_num_pres_ind", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0303, Tuple2.of("callback_num_atag", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0304, Tuple2.of("number_of_messages", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0381, Tuple2.of("callback_num", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0420, Tuple2.of("dpf_result", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0421, Tuple2.of("set_dpf", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0422, Tuple2.of("ms_availability_status", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0423, Tuple2.of("network_error_code", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0424, Tuple2.of("message_payload", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0425, Tuple2.of("delivery_failure_reason", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0426, Tuple2.of("more_messages_to_send", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x0427, Tuple2.of("message_state", FmtUtils::fmtTlvMessageState));
+        KNOWN_TLVS.put((short) 0x0501, Tuple2.of("ussd_service_op", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x1201, Tuple2.of("display_time", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x1203, Tuple2.of("sms_signal", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x1204, Tuple2.of("ms_validity", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x130C, Tuple2.of("alert_on_message_delivery", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x1380, Tuple2.of("its_reply_type", FmtUtils::fmtByteArr));
+        KNOWN_TLVS.put((short) 0x1383, Tuple2.of("its_session_info", FmtUtils::fmtByteArr));
+    }
+
     private FmtUtils() {}
 
-    public static String toHexString(byte... bytes) {
+    private static String toHexString(byte... bytes) {
         if (bytes == null) {
             return "null";
         }
@@ -119,7 +172,7 @@ public final class FmtUtils {
             boolean containsUdh = (submitSm.getEsmClass() & SmppConstants.ESM_UDH_MASK) != 0;
             String shortMsgStr;
             if (containsUdh) {
-                shortMsgStr = "hex(" + toHexString(shortMsg) + ")";
+                shortMsgStr = fmtByteArr(shortMsg);
             } else {
                 shortMsgStr = decodeStr(shortMsg, submitSm.getDataCoding());
             }
@@ -132,14 +185,18 @@ public final class FmtUtils {
 
     private static void fmtTlvs(List<Tlv> tlvList, StringBuilder builder) {
         tlvList.forEach(tlv -> {
-            String name = tlv.getName();
+            short tag = tlv.getTag();
             byte[] value = tlv.getValue();
-            if (name == null) {
-                name = "tlv(" + FmtUtils.fmtShort(tlv.getTag()) + ")";
+            var tlvConf = KNOWN_TLVS.get(tag);
+            if (tlvConf == null) {
+                builder.append("\n[tlv(").append(fmtShort(tag)).append(")]: ")
+                        .append(fmtByteArr(value));
+            } else {
+                String tagName = tlvConf.getFirst();
+                var valueFormatter = tlvConf.getSecond();
+                builder.append("\n[").append(tagName).append("]: ")
+                        .append(valueFormatter.apply(value));
             }
-            builder.append("\n")
-                    .append("[").append(name).append("]: ")
-                    .append("hex(").append(FmtUtils.toHexString(value)).append(")");
         });
     }
 
@@ -159,8 +216,53 @@ public final class FmtUtils {
         try {
             output = new String(bytes, charset);
         } catch (Exception e) {
-            output = "hex(" + toHexString(bytes) + ")";
+            output = fmtByteArr(bytes);
         }
         return output;
+    }
+
+    private static String fmtByteArr(byte[] b) {
+        return "hex(" + toHexString(b) + ")";
+    }
+
+    private static String fmtCStr(byte[] b) {
+        return new String(b, StandardCharsets.US_ASCII);
+    }
+
+
+    // ------------------------- TLV specific functions ------------------------- //
+
+    private static String fmtTlvMessageState(byte[] b) {
+        byte msgState = b[0];
+        String desc;
+        switch (msgState) {
+            case 1:
+                desc = "ENROUTE";
+                break;
+            case 2:
+                desc = "DELIVERED";
+                break;
+            case 3:
+                desc = "EXPIRED";
+                break;
+            case 4:
+                desc = "DELETED";
+                break;
+            case 5:
+                desc = "UNDELIVERABLE";
+                break;
+            case 6:
+                desc = "ACCEPTED";
+                break;
+            case 7:
+                desc = "UNKNOWN";
+                break;
+            case 8:
+                desc = "REJECTED";
+                break;
+            default:
+                desc = "";
+        }
+        return "" + msgState + " (" + desc + ")";
     }
 }
