@@ -19,10 +19,6 @@ or build it manually using gradle: `gradle build`
 
 ### Build custom java runtime with smppgui
 
-1. Build smppgui using gradle `gradle build`
-2. Go to _build/libs_ directory and execute following command:
-   ```
-   jlink --module-path smppgui.jar --add-modules smppgui --output smppgui --launcher smppgui=smppgui/com.ukarim.smppgui.Main
-   ```
-3. Launch smppgui using the generated bash script: `./smppgui/bin/smppgui`
-4. Finally, archive the generated _smppgui_ directory and distribute it. Thus, end users do not need to pre-install java on their computers.
+1. Build custom java runtime `gradle jlink`
+2. Launch smppgui using the generated bash script: `./smppgui/bin/smppgui`
+3. Finally, archive the generated _smppgui_ directory and distribute it. Thus, end users do not need to pre-install java on their computers.

@@ -1,3 +1,5 @@
+import java.nio.file.Path
+
 plugins {
     id 'java'
 }
@@ -11,8 +13,10 @@ java {
     version = '0.1.0'
 }
 
+def smppguiFilename = 'smppgui.jar'
+
 jar {
-    archiveFileName = 'smppgui.jar'
+    archiveFileName = smppguiFilename
     metaInf {
         from 'README.md'
         from 'LICENSE.txt'
@@ -28,4 +32,22 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+clean {
+    // remove dir created by jlink task
+    delete 'smppgui'
+}
+
+// This task builds custom jre images with only necessary modules included
+tasks.register('jlink', Exec) {
+    dependsOn 'build'
+    def modulePath = Path.of(buildDir.absolutePath, "libs", smppguiFilename)
+    commandLine ([
+            'jlink',                                                  // jlink must be preinstalled on your machine
+            '--module-path', modulePath,                              // Smppgui jar file
+            '--add-modules', 'smppgui',
+            '--output', 'smppgui',                                    // Output directory
+            '--launcher', 'smppgui=smppgui/com.ukarim.smppgui.Main'   // Launcher shell script. See smppgui/bin directory
+    ])
 }
