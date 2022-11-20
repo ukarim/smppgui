@@ -2,7 +2,6 @@ package com.ukarim.smppgui.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public final class SmppUtils {
@@ -25,15 +24,11 @@ public final class SmppUtils {
         return s.getBytes(StandardCharsets.UTF_16BE);
     }
 
-    public static List<byte[]> toUdhPartsInUcs2(String s) {
-        if (s == null) {
-            return Collections.emptyList();
-        }
-        int len = s.length() * 2; // multiple 2 due ucs2 encoding
+    public static List<byte[]> toUdhParts(byte[] bytes) {
+        int len = bytes.length;
         int count = (int) Math.ceil(((double) len)/ UDH_MAX_CONTENT_LENGTH);
         var partsList = new ArrayList<byte[]>(count);
 
-        byte[] bytes = toUcs2Bytes(s);
         for (int i = 0; i < count; i++) {
             int startIdx = i * UDH_MAX_CONTENT_LENGTH;
             int endIdx = Math.min(startIdx + UDH_MAX_CONTENT_LENGTH, len);

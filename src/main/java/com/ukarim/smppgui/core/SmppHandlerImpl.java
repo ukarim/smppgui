@@ -5,6 +5,7 @@ import com.ukarim.smppgui.gui.EventType;
 import com.ukarim.smppgui.gui.LoginModel;
 import com.ukarim.smppgui.gui.LoginModel.SessionType;
 import com.ukarim.smppgui.gui.SubmitModel;
+import com.ukarim.smppgui.gui.SubmitModel.DataCoding;
 import com.ukarim.smppgui.protocol.SmppClient;
 import com.ukarim.smppgui.protocol.SmppCmd;
 import com.ukarim.smppgui.protocol.SmppConstants;
@@ -17,8 +18,11 @@ import com.ukarim.smppgui.protocol.pdu.HeaderPdu;
 import com.ukarim.smppgui.protocol.pdu.Pdu;
 import com.ukarim.smppgui.protocol.pdu.SubmitSmPdu;
 import com.ukarim.smppgui.util.FmtUtils;
+import com.ukarim.smppgui.util.GsmCharset;
 import com.ukarim.smppgui.util.SmppUtils;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -27,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SmppHandlerImpl implements SmppHandler {
 
-    private static final int MAX_SHORT_MSG_LEN = 70;
+    private static final int MAX_SHORT_MSG_LEN = 140;
 
     private final long TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
@@ -136,17 +140,18 @@ public class SmppHandlerImpl implements SmppHandler {
 
     public void submitMessage(SubmitModel submitModel) {
         try {
-            String shortMessage = submitModel.getShortMessage();
+            DataCoding dataCoding = submitModel.getDataCoding();
+            byte[] smBytes = toBytes(submitModel.getShortMessage(), dataCoding);
             List<SubmitSmPdu> pduList = new ArrayList<>();
-            if (shortMessage.length() > MAX_SHORT_MSG_LEN) {
-                List<byte[]> udhParts = SmppUtils.toUdhPartsInUcs2(shortMessage);
+            if (smBytes.length > MAX_SHORT_MSG_LEN) {
+                List<byte[]> udhParts = SmppUtils.toUdhParts(smBytes);
                 for (byte[] p : udhParts) {
                     var submitSmPdu = new SubmitSmPdu(
                             nextSeqNum(),
                             submitModel.getSrcAddress(),
                             submitModel.getDestAddress(),
                             p,
-                            SmppConstants.DATA_CODING_UCS2
+                            dataCoding.getValue()
                     );
                     setSubmitSmOptionalFields(submitSmPdu, submitModel);
                     submitSmPdu.setEsmClass(SmppConstants.ESM_UDH_MASK);
@@ -157,8 +162,8 @@ public class SmppHandlerImpl implements SmppHandler {
                         nextSeqNum(),
                         submitModel.getSrcAddress(),
                         submitModel.getDestAddress(),
-                        SmppUtils.toUcs2Bytes(shortMessage),
-                        SmppConstants.DATA_CODING_UCS2
+                        smBytes,
+                        dataCoding.getValue()
                 );
                 setSubmitSmOptionalFields(submitSmPdu, submitModel);
                 submitSmPdu.setEsmClass(SmppConstants.ESM_DEFAULT);
@@ -173,6 +178,27 @@ public class SmppHandlerImpl implements SmppHandler {
         } catch (Exception e) {
             showErrorDialog("Submit error: %s", e.getMessage());
         }
+    }
+
+    private byte[] toBytes(String s, DataCoding dataCoding) {
+        Charset charset;
+        switch (dataCoding) {
+            case GSM:
+                charset = GsmCharset.INSTANCE;
+                break;
+            case IA5:
+                charset = StandardCharsets.US_ASCII;
+                break;
+            case LATIN1:
+                charset = StandardCharsets.ISO_8859_1;
+                break;
+            case UCS2:
+                charset = StandardCharsets.UTF_16BE;
+                break;
+            default:
+                charset = StandardCharsets.US_ASCII;
+        }
+        return s.getBytes(charset);
     }
 
     private void setSubmitSmOptionalFields(SubmitSmPdu submitSmPdu, SubmitModel submitModel) {

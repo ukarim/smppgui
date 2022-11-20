@@ -1,8 +1,34 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.protocol.SmppConstants;
 import com.ukarim.smppgui.protocol.pdu.Address;
 
 public class SubmitModel {
+
+    public enum DataCoding {
+
+        GSM(SmppConstants.DATA_CODING_DEFAULT, "GSM unpacked (8 bit for character)"),
+        IA5(SmppConstants.DATA_CODING_IA5, "IA5 (ASCII)"),
+        LATIN1(SmppConstants.DATA_CODING_LATIN1, "LATIN-1 (ISO-8859-1)"),
+        UCS2(SmppConstants.DATA_CODING_UCS2, "UCS2");
+
+        private final byte value;
+        private final String desc;
+
+        DataCoding(byte value, String desc) {
+            this.value = value;
+            this.desc = desc;
+        }
+
+        public byte getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return desc;
+        }
+    }
 
     private final Address srcAddress;
     private final Address destAddress;
@@ -13,11 +39,13 @@ public class SubmitModel {
     private byte priorityFlag;
     private String schedDeliverTime;
     private String validityPeriod;
+    private final DataCoding dataCoding;
 
-    public SubmitModel(Address srcAddress, Address destAddress, String shortMessage) {
+    public SubmitModel(Address srcAddress, Address destAddress, String shortMessage, DataCoding dataCoding) {
         this.srcAddress = srcAddress;
         this.destAddress = destAddress;
         this.shortMessage = shortMessage;
+        this.dataCoding = dataCoding;
     }
 
     public Address getSrcAddress() {
@@ -30,6 +58,10 @@ public class SubmitModel {
 
     public String getShortMessage() {
         return shortMessage;
+    }
+
+    public DataCoding getDataCoding() {
+        return dataCoding;
     }
 
     public String getServiceType() {

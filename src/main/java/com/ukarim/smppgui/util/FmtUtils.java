@@ -1,5 +1,7 @@
 package com.ukarim.smppgui.util;
 
+import static com.ukarim.smppgui.protocol.SmppConstants.DATA_CODING_DEFAULT;
+import static com.ukarim.smppgui.protocol.SmppConstants.DATA_CODING_IA5;
 import static com.ukarim.smppgui.protocol.SmppConstants.DATA_CODING_LATIN1;
 import static com.ukarim.smppgui.protocol.SmppConstants.DATA_CODING_UCS2;
 
@@ -209,8 +211,15 @@ public final class FmtUtils {
             case DATA_CODING_LATIN1:
                 charset = StandardCharsets.ISO_8859_1;
                 break;
-            default:
+            case DATA_CODING_IA5:
                 charset = StandardCharsets.US_ASCII;
+                break;
+            case DATA_CODING_DEFAULT:
+                charset = GsmCharset.INSTANCE;
+                break;
+            default:
+                // print hex bytes for unsupported charsets
+                return fmtByteArr(bytes);
         }
         String output;
         try {

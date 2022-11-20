@@ -1,7 +1,7 @@
 package com.ukarim.smppgui.protocol.pdu;
 
 import com.ukarim.smppgui.protocol.SmppConstants;
-import com.ukarim.smppgui.util.SmppUtils;
+import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +31,7 @@ class SubmitSmPduTest {
         };
         Address srcAddr = new Address((byte) 0x00, (byte) 0x00, "1001");
         Address destAddr = new Address((byte) 0x00, (byte) 0x00, "77012110000");
-        var submitSm = new SubmitSmPdu(102, srcAddr, destAddr, SmppUtils.toUcs2Bytes("Test"), SmppConstants.DATA_CODING_UCS2);
+        var submitSm = new SubmitSmPdu(102, srcAddr, destAddr, "Test".getBytes(StandardCharsets.UTF_16BE), SmppConstants.DATA_CODING_UCS2);
         submitSm.setServiceType("smppgui");
         submitSm.setPriorityFlag((byte) 0x02);
         submitSm.setRegisteredDelivery((byte) 0x01);

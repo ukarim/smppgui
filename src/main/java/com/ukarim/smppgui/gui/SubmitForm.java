@@ -1,5 +1,6 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.gui.SubmitModel.DataCoding;
 import com.ukarim.smppgui.protocol.pdu.Address;
 import com.ukarim.smppgui.util.SmppUtils;
 import java.awt.event.ActionEvent;
@@ -11,8 +12,10 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SpinnerListModel;
 import javax.swing.border.EmptyBorder;
 
 import static com.ukarim.smppgui.util.StringUtils.isEmpty;
@@ -41,6 +44,8 @@ class SubmitForm extends JPanel implements ActionListener {
 
     private final JTextArea shortMessageTextArea = new JTextArea();
 
+    private final JSpinner dataCodingSpinner;
+
     SubmitForm(EventDispatcher eventDispatcher) {
         this.eventDispatcher = eventDispatcher;
         setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -60,6 +65,15 @@ class SubmitForm extends JPanel implements ActionListener {
         shortMessageTextArea.setLineWrap(true);
         shortMessageTextArea.setRows(3);
 
+        var spinnerModel = new SpinnerListModel(DataCoding.values());
+        spinnerModel.setValue(DataCoding.UCS2); // set default value
+        dataCodingSpinner = new JSpinner(spinnerModel);
+
+        // make spinner not editable
+        var spinnerEditor = new JSpinner.DefaultEditor(dataCodingSpinner);
+        spinnerEditor.getTextField().setEditable(false);
+        dataCodingSpinner.setEditor(spinnerEditor);
+
         var components = Arrays.asList(
                 new Pair(disconnectButton, null),
 
@@ -71,6 +85,7 @@ class SubmitForm extends JPanel implements ActionListener {
                 new Pair(new JLabel("dest_addr_ton"), destAddrTonField),
                 new Pair(new JLabel("dest_addr_npi"), destAddrNpiField),
                 new Pair(new JLabel("short_message"), shortMessageTextArea),
+                new Pair(new JLabel("data_coding"), dataCodingSpinner),
 
                 // optional fields
                 new Pair(new JLabel("registered_delivery"), registeredDeliveryField),
@@ -231,7 +246,8 @@ class SubmitForm extends JPanel implements ActionListener {
         var submitModel = new SubmitModel(
                 new Address(srcAddrTon, srcAddrNpi, srcAddr.trim()),
                 new Address(destAddrTon, destAddrNpi, destAddr.trim()),
-                shortMessage.trim()
+                shortMessage.trim(),
+                (DataCoding) dataCodingSpinner.getModel().getValue()
         );
         submitModel.setRegisteredDelivery(registeredDelivery);
         submitModel.setProtocolId(protocolId);
