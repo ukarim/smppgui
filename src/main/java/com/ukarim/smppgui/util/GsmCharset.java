@@ -132,7 +132,10 @@ public final class GsmCharset extends Charset {
             // because 0x1B (extension prefix) also represented as space inside CHAR_TABLE
             return 32;
         }
-        for (int i = 0; i < len; i++) {
+
+        // search char table backwards
+        // most of commonly used characters are at the end of array
+        for (int i = len - 1; i >= 0; i--) {
             if (charTable[i] == ch) {
                 res = i;
                 break;
