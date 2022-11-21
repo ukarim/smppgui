@@ -1,6 +1,5 @@
 package com.ukarim.smppgui.util;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,10 +17,6 @@ public final class SmppUtils {
             return false;
         }
         return s.matches(VALID_TIME_REGEX);
-    }
-
-    public static byte[] toUcs2Bytes(String s) {
-        return s.getBytes(StandardCharsets.UTF_16BE);
     }
 
     public static List<byte[]> toUdhParts(byte[] bytes) {
