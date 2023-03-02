@@ -24,6 +24,12 @@ jar {
     manifest {
         attributes('Main-Class': 'com.ukarim.smppgui.Main')
     }
+    filesMatching('**/about.txt') { fcp ->
+        fcp.filter { line ->
+            def date = (new Date()).format('MMM dd, yyyy')
+            line.replace('{buildInfo}', "Built on ${date}. Version: ${version}")
+        }
+    }
 }
 
 dependencies {

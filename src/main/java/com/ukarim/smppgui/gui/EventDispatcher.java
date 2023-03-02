@@ -1,12 +1,17 @@
 package com.ukarim.smppgui.gui;
 
 import com.ukarim.smppgui.core.SmppHandlerImpl;
+import com.ukarim.smppgui.util.Resources;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 public class EventDispatcher {
+
+    private static final ImageIcon INFO_ICON = Resources.loadIcon("/info.png");
+    private static final ImageIcon ERROR_ICON = Resources.loadIcon("/error.png");
 
     private final ExecutorService workerThread = Executors.newSingleThreadExecutor();
     private LoggingPane loggingPane;
@@ -41,12 +46,12 @@ public class EventDispatcher {
             }
             case SHOW_ERROR: {
                 var msg = (String) eventAttach;
-                JOptionPane.showMessageDialog(null, msg, null, JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, msg, null, JOptionPane.ERROR_MESSAGE, ERROR_ICON);
                 break;
             }
             case SHOW_INFO: {
                 var msg = (String) eventAttach;
-                JOptionPane.showMessageDialog(null, msg, null, JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, msg, null, JOptionPane.INFORMATION_MESSAGE, INFO_ICON);
                 break;
             }
             case DO_LOGIN: {
