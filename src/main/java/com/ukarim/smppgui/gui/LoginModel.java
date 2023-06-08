@@ -1,5 +1,7 @@
 package com.ukarim.smppgui.gui;
 
+import java.nio.charset.Charset;
+
 public class LoginModel {
 
     private final String host;
@@ -14,13 +16,17 @@ public class LoginModel {
 
     private final String systemType;
 
-    LoginModel(String host, int port, String systemId, char[] password, SessionType sessionType, String systemType) {
+    private final Charset defaultCharset;
+
+    LoginModel(String host, int port, String systemId, char[] password, SessionType sessionType, String systemType,
+               Charset defaultCharset) {
         this.host = host;
         this.port = port;
         this.systemId = systemId;
         this.password = password;
         this.sessionType = sessionType;
         this.systemType = systemType;
+        this.defaultCharset = defaultCharset;
     }
 
     public String getHost() {
@@ -45,6 +51,10 @@ public class LoginModel {
 
     public String getSystemType() {
         return systemType;
+    }
+
+    public Charset getDefaultCharset() {
+        return defaultCharset;
     }
 
     public enum SessionType {

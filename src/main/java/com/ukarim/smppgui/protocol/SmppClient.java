@@ -99,7 +99,8 @@ public final class SmppClient {
                     try {
                          pdus = PduParser.parsePdu(buffer);
                     } catch (Exception e) {
-                        smppHandler.handlePdu(null, new SmppException("Pdu parsing error", e));
+                        e.printStackTrace();
+                        smppHandler.handlePdu(null, new SmppException(e, "Pdu parsing error"));
                         continue;
                     }
 
