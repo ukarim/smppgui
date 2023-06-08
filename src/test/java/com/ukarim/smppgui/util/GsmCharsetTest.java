@@ -3,6 +3,12 @@ package com.ukarim.smppgui.util;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+
 class GsmCharsetTest {
 
     private static final String GSM_7_ALPHABET = "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà^{}\\[~]|€";
@@ -21,15 +27,60 @@ class GsmCharsetTest {
             0x3E, 0x1B, 0x40, 0x1B, 0x65
     };
 
+    private static final byte[] GSM_7_ALPHABET_BYTES_PACKED = new byte[] {
+            -128, -128, 96, 64, 40, 24, 14, -120, -124, 98, -63, 104, 56, 30, -112, -120, 100, 66, -87, 88, 46, -104, -116, -122, -45, -15, 124, 64, 33, -47, -120, 84, 50, -99, 80, 41, -43, -118, -43, 114, -67, 96, 49, -39, -116, 86, -77, -35, 112, 57, -35, -114, -41, -13, -3, -128, 65, -31, -112, 88, 52, 30, -111, 73, -27, -110, -39, 116, 62, -95, 81, -23, -108, 90, -75, 94, -79, 89, -19, -106, -37, -11, 126, -63, 97, -15, -104, 92, 54, -97, -47, 105, -11, -102, -35, 118, -65, -31, 113, -7, -100, 94, -73, -33, -15, 121, -3, -98, -33, -9, -1, 55, -108, 13, 106, -109, -38, -68, 54, -68, 77, 111, -29, -37, 0, 55, 101
+    };
+
+    private byte[] readResource(String f) throws Exception {
+        Path p = Paths.get(GsmCharsetTest.class.getResource(f).toURI());
+        return Files.readAllBytes(p);
+    }
+
     @Test
     void checkEncode() {
-        byte[] encoded = GSM_7_ALPHABET.getBytes(GsmCharset.INSTANCE);
+        byte[] encoded = GSM_7_ALPHABET.getBytes(GsmCharset.INSTANCE_8BIT);
         Assertions.assertEquals(GSM_7_ALPHABET_BYTES.length, encoded.length);
         Assertions.assertArrayEquals(GSM_7_ALPHABET_BYTES, encoded);
     }
 
     @Test
+    void checkEncodeLoremIpsum() throws Exception {
+        String text = new String(readResource("/gsm/lorem_ipsum.txt"), StandardCharsets.US_ASCII);
+        byte[] expected = readResource("/gsm/lorem_ipsum.8bit.bin");
+        Assertions.assertArrayEquals(expected, text.getBytes(GsmCharset.INSTANCE_8BIT));
+    }
+
+    @Test
     void checkDecode() {
-        Assertions.assertEquals(GSM_7_ALPHABET, new String(GSM_7_ALPHABET_BYTES, GsmCharset.INSTANCE));
+        Assertions.assertEquals(GSM_7_ALPHABET, new String(GSM_7_ALPHABET_BYTES, GsmCharset.INSTANCE_8BIT));
+    }
+
+    @Test
+    void checkDecodeLoremIpsum() throws Exception {
+        String text = new String(readResource("/gsm/lorem_ipsum.txt"), StandardCharsets.US_ASCII);
+        Assertions.assertEquals(text, new String(readResource("/gsm/lorem_ipsum.8bit.bin"), GsmCharset.INSTANCE_8BIT));
+    }
+
+    @Test
+    void checkDecode7Bit() {
+        Assertions.assertEquals(GSM_7_ALPHABET, new String(GSM_7_ALPHABET_BYTES_PACKED, GsmCharset.INSTANCE_7BIT));
+    }
+
+    @Test
+    void checkDecode7bitLoremIpsum() throws Exception {
+        String text = new String(readResource("/gsm/lorem_ipsum.txt"), StandardCharsets.US_ASCII);
+        Assertions.assertEquals(text, new String(readResource("/gsm/lorem_ipsum.7bit.bin"), GsmCharset.INSTANCE_7BIT));
+    }
+
+    @Test
+    void checkEncode7Bit() {
+        Assertions.assertArrayEquals(GSM_7_ALPHABET_BYTES_PACKED, GSM_7_ALPHABET.getBytes(GsmCharset.INSTANCE_7BIT));
+    }
+
+    @Test
+    void checkEncode7bitLoremIpsum() throws Exception {
+        String text = new String(readResource("/gsm/lorem_ipsum.txt"), StandardCharsets.US_ASCII);
+        byte[] expected = readResource("/gsm/lorem_ipsum.7bit.bin");
+        Assertions.assertArrayEquals(expected, text.getBytes(GsmCharset.INSTANCE_7BIT));
     }
 }

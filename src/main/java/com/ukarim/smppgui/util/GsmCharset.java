@@ -9,7 +9,8 @@ import java.nio.charset.CoderResult;
 
 public final class GsmCharset extends Charset {
 
-    public static final GsmCharset INSTANCE = new GsmCharset();
+    public static final GsmCharset INSTANCE_8BIT = new GsmCharset("GSM-8bit", false);
+    public static final GsmCharset INSTANCE_7BIT = new GsmCharset("GSM-7bit", true);
 
     private static final byte EXT_PREFIX = 0x1B;
 
@@ -37,8 +38,11 @@ public final class GsmCharset extends Charset {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 
-    private GsmCharset() {
-        super("GSM-7", null);
+    private final boolean packed;
+
+    private GsmCharset(String name, boolean packed) {
+        super(name, null);
+        this.packed = packed;
     }
 
     @Override
@@ -48,12 +52,12 @@ public final class GsmCharset extends Charset {
 
     @Override
     public CharsetDecoder newDecoder() {
-        return new Decoder(this);
+        return packed ? new Decoder7Bit(this) : new Decoder(this);
     }
 
     @Override
     public CharsetEncoder newEncoder() {
-        return new Encoder(this);
+        return packed ? new Encoder7Bit(this) : new Encoder(this);
     }
 
     private static class Decoder extends CharsetDecoder {
@@ -62,20 +66,24 @@ public final class GsmCharset extends Charset {
             super(cs, 1, 2);
         }
 
+        protected Decoder(Charset cs, float a, float b) {
+            super(cs, a, b);
+        }
+
         @Override
         protected CoderResult decodeLoop(ByteBuffer in, CharBuffer out) {
             while (in.hasRemaining()) {
                 if (!out.hasRemaining()) {
                     return CoderResult.OVERFLOW;
                 }
-                byte code = in.get();
+                int code = readFromIn(in);
                 if (code == EXT_PREFIX) {
                     if (!in.hasRemaining()) {
                         // wait for next byte after extension prefix
                         in.position(in.position() - 1);
                         return CoderResult.UNDERFLOW;
                     }
-                    byte extCode = in.get();
+                    int extCode = readFromIn(in);
                     out.put(EXT_CHAR_TABLE[extCode]);
                 } else {
                     out.put(CHAR_TABLE[code]);
@@ -83,12 +91,20 @@ public final class GsmCharset extends Charset {
             }
             return CoderResult.UNDERFLOW;
         }
+
+        protected int readFromIn(ByteBuffer in) {
+            return in.get();
+        }
     }
 
     private static class Encoder extends CharsetEncoder {
 
         protected Encoder(Charset cs) {
             super(cs, 1, 2);
+        }
+
+        protected Encoder(Charset cs, float a, float b) {
+            super(cs, a, b);
         }
 
         @Override
@@ -100,7 +116,7 @@ public final class GsmCharset extends Charset {
                 char ch = in.get();
                 int code = findCharCode(CHAR_TABLE, ch);
                 if (code != -1) {
-                    out.put((byte) code);
+                    writeToOut(code, out);
                 } else {
                     int extCode = findCharCode(EXT_CHAR_TABLE, ch);
                     if (extCode != -1) {
@@ -112,16 +128,102 @@ public final class GsmCharset extends Charset {
                             in.position(in.position() - 1);
                             return CoderResult.OVERFLOW;
                         } else {
-                            out.put(EXT_PREFIX);
-                            out.put((byte) extCode);
+                            writeToOut(EXT_PREFIX, out);
+                            writeToOut(extCode, out);
                         }
                     } else {
                         // use '?' sign for unsupported characters
-                        out.put((byte) 0x3F);
+                        writeToOut(0x3F, out);
                     }
                 }
             }
             return CoderResult.UNDERFLOW;
+        }
+
+        protected void writeToOut(int code, ByteBuffer out) {
+            out.put((byte) code);
+        }
+    }
+
+    /* 7bit encoding & decoding algorithms are heavily inspired by cloudhopper's GSMBitPacker utility */
+
+    private static class Decoder7Bit extends Decoder {
+
+        private byte prevCode;
+        private byte bits;
+        private int bitpos = -1;
+
+        protected Decoder7Bit(Charset cs) {
+            super(cs, 8.0f/7.0f, 8.0f/7.0f);
+        }
+
+        @Override
+        protected CoderResult implFlush(CharBuffer out) {
+            byte code = (byte) (((bits & 0xFF) >> bitpos) & 0x7F);
+            if (code != 0) {
+                char[] table = EXT_PREFIX == prevCode ? EXT_CHAR_TABLE : CHAR_TABLE;
+                out.put(table[code]);
+            }
+            return CoderResult.UNDERFLOW;
+        }
+
+        @Override
+        protected void implReset() {
+            bits = 0;
+            bitpos = -1;
+        }
+
+        @Override
+        protected int readFromIn(ByteBuffer in) {
+            if (bitpos == -1 || bitpos == 0) {
+                bits = in.get();
+                bitpos = 0;
+            }
+            byte code = (byte) (((bits & 0xFF) >> bitpos) & 0x7F);
+            if (bitpos >= 2) {
+                bits = in.get();
+                code |= (byte) ((bits << (8 - bitpos)) & 0x7F);
+            }
+            bitpos = (bitpos + 7) % 8;
+            this.prevCode = code;
+            return (int) code & 0x0000ff;
+        }
+    }
+
+    private static class Encoder7Bit extends Encoder {
+
+        private byte packed;
+        private int bitpos;
+
+        protected Encoder7Bit(Charset cs) {
+            super(cs, 7.0f/8.0f, 14.0f/8.0f);
+        }
+
+        @Override
+        protected CoderResult implFlush(ByteBuffer out) {
+            out.put(packed);
+            return CoderResult.UNDERFLOW;
+        }
+
+        @Override
+        protected void implReset() {
+            packed = 0;
+            bitpos = 0;
+        }
+
+        @Override
+        protected void writeToOut(int code, ByteBuffer out) {
+            byte b = (byte) (code & 0x7F);
+            packed |= (byte) ((b & 0xFF) << bitpos);
+            if (bitpos >= 2) {
+                out.put(packed);
+                packed = (byte) (b >> (8 - bitpos));
+            }
+            bitpos = (bitpos + 7) % 8;
+            if (bitpos == 0) {
+                out.put(packed);
+                packed = 0;
+            }
         }
     }
 

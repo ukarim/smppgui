@@ -18,7 +18,6 @@ import com.ukarim.smppgui.protocol.pdu.HeaderPdu;
 import com.ukarim.smppgui.protocol.pdu.Pdu;
 import com.ukarim.smppgui.protocol.pdu.SubmitSmPdu;
 import com.ukarim.smppgui.util.FmtUtils;
-import com.ukarim.smppgui.util.GsmCharset;
 import com.ukarim.smppgui.util.SmppUtils;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -40,6 +39,8 @@ public class SmppHandlerImpl implements SmppHandler {
     private final EventDispatcher eventDispatcher;
     private final SmppClient smppClient;
 
+    private Charset defaultCharset;
+
     public SmppHandlerImpl(EventDispatcher eventDispatcher) {
         this.eventDispatcher = eventDispatcher;
         this.smppClient = new SmppClient(this);
@@ -56,11 +57,11 @@ public class SmppHandlerImpl implements SmppHandler {
             printMsg("Error occurred: %s", e.getMessage());
             return null;
         }
-        printMsg("Pdu received:\n%s", FmtUtils.fmtPdu(pdu));
+        printMsg("Pdu received:\n%s", fmtPdu(pdu));
 
         Pdu respPdu = handlePduInternal(pdu);
         if (respPdu != null) {
-            printMsg("Pdu sent:\n%s", FmtUtils.fmtPdu(respPdu));
+            printMsg("Pdu sent:\n%s", fmtPdu(respPdu));
         }
         return respPdu;
     }
@@ -86,6 +87,7 @@ public class SmppHandlerImpl implements SmppHandler {
         String password = new String(loginModel.getPassword());
         SessionType sessionType = loginModel.getSessionType();
         String systemType = loginModel.getSystemType();
+        this.defaultCharset = loginModel.getDefaultCharset();
 
         try {
             // establish tcp connection
@@ -105,9 +107,9 @@ public class SmppHandlerImpl implements SmppHandler {
             bindReq.setSystemType(systemType);
 
             // send bind request
-            printMsg("Pdu sent:\n%s", FmtUtils.fmtPdu(bindReq));
+            printMsg("Pdu sent:\n%s", fmtPdu(bindReq, StandardCharsets.US_ASCII));
             BindRespPdu bindResp = (BindRespPdu) smppClient.sendPduSync(bindReq, TIMEOUT_MILLIS);
-            printMsg("Pdu received:\n%s", FmtUtils.fmtPdu(bindResp));
+            printMsg("Pdu received:\n%s", fmtPdu(bindResp));
             SmppStatus respSts = bindResp.getSts();
             if (SmppStatus.ESME_ROK.equals(respSts)) {
                 eventDispatcher.dispatch(EventType.SHOW_SUBMIT_FORM);
@@ -127,9 +129,9 @@ public class SmppHandlerImpl implements SmppHandler {
     public void disconnect() {
         try {
             var unbind = new HeaderPdu(SmppCmd.UNBIND, nextSeqNum());
-            printMsg("Pdu sent:\n%s", FmtUtils.fmtPdu(unbind));
+            printMsg("Pdu sent:\n%s", fmtPdu(unbind));
             Pdu unbindResp = smppClient.sendPduSync(unbind, TIMEOUT_MILLIS);
-            printMsg("Pdu received:\n%s", FmtUtils.fmtPdu(unbindResp));
+            printMsg("Pdu received:\n%s", fmtPdu(unbindResp));
         } catch (Exception e) {
             showErrorDialog("Disconnect error: %s", e.getMessage());
         } finally {
@@ -172,7 +174,7 @@ public class SmppHandlerImpl implements SmppHandler {
 
             for (var submitSmPdu : pduList) {
                 smppClient.sendPdu(submitSmPdu);
-                printMsg("Pdu sent:\n%s", FmtUtils.fmtPdu(submitSmPdu));
+                printMsg("Pdu sent:\n%s", fmtPdu(submitSmPdu, getCharset(dataCoding)));
             }
             showInfoDialog("Short message was sent");
         } catch (Exception e) {
@@ -181,10 +183,14 @@ public class SmppHandlerImpl implements SmppHandler {
     }
 
     private byte[] toBytes(String s, DataCoding dataCoding) {
+        return s.getBytes(getCharset(dataCoding));
+    }
+
+    private Charset getCharset(DataCoding dataCoding) {
         Charset charset;
         switch (dataCoding) {
-            case GSM:
-                charset = GsmCharset.INSTANCE;
+            case DEFAULT:
+                charset = defaultCharset;
                 break;
             case IA5:
                 charset = StandardCharsets.US_ASCII;
@@ -196,9 +202,10 @@ public class SmppHandlerImpl implements SmppHandler {
                 charset = StandardCharsets.UTF_16BE;
                 break;
             default:
-                charset = StandardCharsets.US_ASCII;
+                // should not happen
+                throw new IllegalArgumentException("Unknown data coding " + dataCoding);
         }
-        return s.getBytes(charset);
+        return charset;
     }
 
     private void setSubmitSmOptionalFields(SubmitSmPdu submitSmPdu, SubmitModel submitModel) {
@@ -224,5 +231,13 @@ public class SmppHandlerImpl implements SmppHandler {
 
     private int nextSeqNum() {
         return seqNumGenerator.incrementAndGet();
+    }
+
+    private String fmtPdu(Pdu pdu) {
+        return FmtUtils.fmtPdu(pdu, defaultCharset);
+    }
+
+    private String fmtPdu(Pdu pdu, Charset charset) {
+        return FmtUtils.fmtPdu(pdu, charset);
     }
 }

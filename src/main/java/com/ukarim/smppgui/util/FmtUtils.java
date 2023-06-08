@@ -109,7 +109,7 @@ public final class FmtUtils {
         return "0x" + toHexString(n);
     }
 
-    public static String fmtPdu(Pdu pdu) {
+    public static String fmtPdu(Pdu pdu, Charset defaultCharset) {
         SmppCmd cmd = pdu.getCmd();
         SmppStatus sts = pdu.getSts();
         int seqNum = pdu.getSeqNum();
@@ -176,7 +176,7 @@ public final class FmtUtils {
             if (containsUdh) {
                 shortMsgStr = fmtByteArr(shortMsg);
             } else {
-                shortMsgStr = decodeStr(shortMsg, submitSm.getDataCoding());
+                shortMsgStr = decodeStr(shortMsg, submitSm.getDataCoding(), defaultCharset);
             }
             builder.append("[short_message]: ").append(shortMsgStr);
             fmtTlvs(submitSm.getTlvs(), builder);
@@ -202,7 +202,7 @@ public final class FmtUtils {
         });
     }
 
-    private static String decodeStr(byte[] bytes, byte dataCoding) {
+    private static String decodeStr(byte[] bytes, byte dataCoding, Charset defaultCharset) {
         Charset charset;
         switch (dataCoding) {
             case DATA_CODING_UCS2:
@@ -215,7 +215,7 @@ public final class FmtUtils {
                 charset = StandardCharsets.US_ASCII;
                 break;
             case DATA_CODING_DEFAULT:
-                charset = GsmCharset.INSTANCE;
+                charset = defaultCharset;
                 break;
             default:
                 // print hex bytes for unsupported charsets

@@ -7,7 +7,7 @@ public class SubmitModel {
 
     public enum DataCoding {
 
-        GSM(SmppConstants.DATA_CODING_DEFAULT, "GSM unpacked (8 bit for character)"),
+        DEFAULT(SmppConstants.DATA_CODING_DEFAULT, "Default data coding"),
         IA5(SmppConstants.DATA_CODING_IA5, "IA5 (ASCII)"),
         LATIN1(SmppConstants.DATA_CODING_LATIN1, "LATIN-1 (ISO-8859-1)"),
         UCS2(SmppConstants.DATA_CODING_UCS2, "UCS2");
