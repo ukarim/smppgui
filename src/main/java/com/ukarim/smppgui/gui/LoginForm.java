@@ -1,5 +1,6 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.core.TlsSmppHandlerImpl;
 import com.ukarim.smppgui.gui.LoginModel.SessionType;
 import com.ukarim.smppgui.util.CharsetWrapper;
 import com.ukarim.smppgui.util.GsmCharset;
@@ -11,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -21,7 +23,9 @@ import javax.swing.border.EmptyBorder;
 
 class LoginForm extends JPanel implements ActionListener {
 
-    private final EventDispatcher eventDispatcher;
+	private static final long serialVersionUID = 1L;
+
+	private final EventDispatcher eventDispatcher;
 
     private final JTextField hostField;
     private final JTextField portField;
@@ -31,6 +35,7 @@ class LoginForm extends JPanel implements ActionListener {
     private final JButton button;
     private final JSpinner sessionTypeSpinner;
     private final JSpinner charsetSpinner;
+	private final JCheckBox tlsCheckBox;  
 
     LoginForm(EventDispatcher eventDispatcher) {
         this.eventDispatcher = eventDispatcher;
@@ -58,6 +63,9 @@ class LoginForm extends JPanel implements ActionListener {
 
         var serviceTypeLabel = new JLabel("System type");
         systemTypeField = new JTextField();
+        
+        var tlsLabel = new JLabel("TLS");
+        tlsCheckBox = new JCheckBox();
 
         var dataCodingLabel = new JLabel("Default data coding");
         Charset[] charsets = {
@@ -81,6 +89,7 @@ class LoginForm extends JPanel implements ActionListener {
                         .addComponent(sessionTypeLabel)
                         .addComponent(serviceTypeLabel)
                         .addComponent(dataCodingLabel)
+						.addComponent(tlsLabel)
                 )
                 .addGroup(layout.createParallelGroup(Alignment.LEADING)
                         .addComponent(hostField)
@@ -90,6 +99,7 @@ class LoginForm extends JPanel implements ActionListener {
                         .addComponent(sessionTypeSpinner)
                         .addComponent(systemTypeField)
                         .addComponent(charsetSpinner)
+						.addComponent(tlsCheckBox)
                         .addComponent(button)
                 )
         );
@@ -122,6 +132,10 @@ class LoginForm extends JPanel implements ActionListener {
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(dataCodingLabel)
                         .addComponent(charsetSpinner)
+                )
+				.addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(tlsCheckBox)
+						.addComponent(tlsLabel)
                 )
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(button)
@@ -172,7 +186,11 @@ class LoginForm extends JPanel implements ActionListener {
         var charset = (Charset) charsetSpinner.getModel().getValue();
 
         String systemType = systemTypeField.getText();
-
+        
+        if (tlsCheckBox.isSelected()) {
+        	var smppHandler = new TlsSmppHandlerImpl(eventDispatcher);
+        	eventDispatcher.setSmppHandler(smppHandler);
+        }
         eventDispatcher.dispatch(EventType.DO_LOGIN,
                 new LoginModel(host, portNum, systemId, password, sessionType, systemType, charset));
 

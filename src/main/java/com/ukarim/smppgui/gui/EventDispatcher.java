@@ -1,6 +1,6 @@
 package com.ukarim.smppgui.gui;
 
-import com.ukarim.smppgui.core.SmppHandlerImpl;
+import com.ukarim.smppgui.protocol.SmppHandler;
 import com.ukarim.smppgui.util.Resources;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,7 +16,7 @@ public class EventDispatcher {
     private final ExecutorService workerThread = Executors.newSingleThreadExecutor();
     private LoggingPane loggingPane;
     private FormsPane formsPane;
-    private SmppHandlerImpl smppHandler;
+    private SmppHandler smppHandler;
 
     void setLoggingPane(LoggingPane loggingPane) {
         this.loggingPane = loggingPane;
@@ -26,7 +26,7 @@ public class EventDispatcher {
         this.formsPane = formsPane;
     }
 
-    void setSmppHandler(SmppHandlerImpl smppHandler) {
+    void setSmppHandler(SmppHandler smppHandler) {
         this.smppHandler = smppHandler;
     }
 
