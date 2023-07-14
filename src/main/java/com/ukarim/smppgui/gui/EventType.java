@@ -9,4 +9,5 @@ public enum EventType {
     SHOW_ERROR,
     SHOW_INFO,
     DO_SUBMIT,
+    CLEAR_LOGS,
 }

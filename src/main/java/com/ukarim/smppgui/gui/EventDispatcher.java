@@ -80,6 +80,8 @@ public class EventDispatcher {
                 workerThread.execute(() -> smppHandler.submitMessage((SubmitModel) eventAttach));
                 break;
             }
+            case CLEAR_LOGS:
+                loggingPane.clearLogs();
             default: {
                 // NOOP
             }

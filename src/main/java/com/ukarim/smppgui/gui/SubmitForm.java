@@ -59,6 +59,9 @@ class SubmitForm extends JPanel implements ActionListener {
         var disconnectButton = new JButton("Disconnect");
         disconnectButton.addActionListener((e) -> eventDispatcher.dispatch(EventType.DISCONNECT));
 
+        var clearLogsButton = new JButton("Clear logs");
+        clearLogsButton.addActionListener((e) -> eventDispatcher.dispatch(EventType.CLEAR_LOGS));
+
         var submitButton = new JButton("Send");
         submitButton.addActionListener(this);
 
@@ -75,7 +78,7 @@ class SubmitForm extends JPanel implements ActionListener {
         dataCodingSpinner.setEditor(spinnerEditor);
 
         var components = Arrays.asList(
-                new Pair(disconnectButton, null),
+                new Pair(disconnectButton, clearLogsButton),
 
                 // mandatory fields
                 new Pair(new JLabel("source_addr"), srcAddrField),
