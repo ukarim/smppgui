@@ -89,7 +89,7 @@ class PduParser {
                 byte replaceIfPresent = buffer.get(); // do not remove
                 byte dataCoding = buffer.get();
                 byte smDefMsgId = buffer.get();  // do not remove
-                byte smLen = buffer.get();
+                short smLen = (short) (buffer.get() & 0xFF); // unsigned version of this byte could be bigger than 127
 
                 byte[] shortMsg = new byte[smLen];
                 copyToByteArr(buffer, shortMsg);

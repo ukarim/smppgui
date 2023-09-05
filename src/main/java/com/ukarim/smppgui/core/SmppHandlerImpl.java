@@ -49,12 +49,18 @@ public class SmppHandlerImpl implements SmppHandler {
     @Override
     public Pdu handlePdu(Pdu pdu, Throwable e) {
         if (e != null) {
+            // disconnect smpp client
+            // probably its internal buffers is in inconsistent state
+            smppClient.disconnect();
+            String title;
             if (e instanceof IOException) {
-                smppClient.disconnect();
-                showErrorDialog("Network error: %s", e.getMessage());
-                eventDispatcher.dispatch(EventType.SHOW_LOGIN_FORM);
+                title = "Network error: %s";
+            } else {
+                title = "Error occurred: %s";
             }
-            printMsg("Error occurred: %s", e.getMessage());
+            printMsg(title, e.getMessage());
+            showErrorDialog(title, e.getMessage());
+            eventDispatcher.dispatch(EventType.SHOW_LOGIN_FORM);
             return null;
         }
         printMsg("Pdu received:\n%s", fmtPdu(pdu));
