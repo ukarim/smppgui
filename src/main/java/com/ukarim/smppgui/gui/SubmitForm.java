@@ -12,6 +12,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -62,6 +63,9 @@ class SubmitForm extends JPanel implements ActionListener {
         var clearLogsButton = new JButton("Clear logs");
         clearLogsButton.addActionListener((e) -> eventDispatcher.dispatch(EventType.CLEAR_LOGS));
 
+        var enqLinkLogButton = new JButton("Toggle enquire links logging");
+        enqLinkLogButton.addActionListener((e) -> eventDispatcher.dispatch(EventType.TOGGLE_ENQ_LINK_LOGS));
+
         var submitButton = new JButton("Send");
         submitButton.addActionListener(this);
 
@@ -79,6 +83,8 @@ class SubmitForm extends JPanel implements ActionListener {
 
         var components = Arrays.asList(
                 new Pair(disconnectButton, clearLogsButton),
+                new Pair(null, enqLinkLogButton),
+                new Pair(new JSeparator(), new JSeparator()),
 
                 // mandatory fields
                 new Pair(new JLabel("source_addr"), srcAddrField),

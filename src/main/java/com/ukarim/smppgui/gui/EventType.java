@@ -10,4 +10,5 @@ public enum EventType {
     SHOW_INFO,
     DO_SUBMIT,
     CLEAR_LOGS,
+    TOGGLE_ENQ_LINK_LOGS,
 }

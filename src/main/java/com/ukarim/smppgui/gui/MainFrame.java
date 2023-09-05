@@ -14,7 +14,7 @@ import javax.swing.JOptionPane;
 public class MainFrame extends JFrame {
 
     private static final int WIDTH = 1200;
-    private static final int HEIGHT = 600;
+    private static final int HEIGHT = 700;
     private static final Image ICON = Resources.loadImage("/icon.png");
     private static final String ABOUT_INFO = Resources.loadStr("/about.txt");
 

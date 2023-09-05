@@ -41,9 +41,15 @@ public class SmppHandlerImpl implements SmppHandler {
 
     private Charset defaultCharset;
 
+    private boolean showEnqLinkLogs = true; // show enquire_link logs by default
+
     public SmppHandlerImpl(EventDispatcher eventDispatcher) {
         this.eventDispatcher = eventDispatcher;
         this.smppClient = new SmppClient(this);
+    }
+
+    public void toggleEnqLinkLogs() {
+        showEnqLinkLogs = !showEnqLinkLogs;
     }
 
     @Override
@@ -63,10 +69,12 @@ public class SmppHandlerImpl implements SmppHandler {
             eventDispatcher.dispatch(EventType.SHOW_LOGIN_FORM);
             return null;
         }
-        printMsg("Pdu received:\n%s", fmtPdu(pdu));
+        if (shouldLogPdu(pdu)) {
+            printMsg("Pdu received:\n%s", fmtPdu(pdu));
+        }
 
         Pdu respPdu = handlePduInternal(pdu);
-        if (respPdu != null) {
+        if (respPdu != null && shouldLogPdu(pdu)) {
             printMsg("Pdu sent:\n%s", fmtPdu(respPdu));
         }
         return respPdu;
@@ -245,5 +253,12 @@ public class SmppHandlerImpl implements SmppHandler {
 
     private String fmtPdu(Pdu pdu, Charset charset) {
         return FmtUtils.fmtPdu(pdu, charset);
+    }
+
+    private boolean shouldLogPdu(Pdu pdu) {
+        if (SmppCmd.ENQUIRE_LINK.equals(pdu.getCmd())) {
+            return showEnqLinkLogs;
+        }
+        return true;
     }
 }
