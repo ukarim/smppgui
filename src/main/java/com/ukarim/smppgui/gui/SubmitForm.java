@@ -10,6 +10,7 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
@@ -63,8 +64,11 @@ class SubmitForm extends JPanel implements ActionListener {
         var clearLogsButton = new JButton("Clear logs");
         clearLogsButton.addActionListener((e) -> eventDispatcher.dispatch(EventType.CLEAR_LOGS));
 
-        var enqLinkLogButton = new JButton("Toggle enquire links logging");
-        enqLinkLogButton.addActionListener((e) -> eventDispatcher.dispatch(EventType.TOGGLE_ENQ_LINK_LOGS));
+        var enqLinkLogCheckbox = new JCheckBox("Show enquire link logs", true);
+        enqLinkLogCheckbox.addActionListener((e) -> {
+            var source = (JCheckBox) e.getSource();
+            eventDispatcher.dispatch(EventType.TOGGLE_ENQ_LINK_LOGS, source.isSelected());
+        });
 
         var submitButton = new JButton("Send");
         submitButton.addActionListener(this);
@@ -83,7 +87,7 @@ class SubmitForm extends JPanel implements ActionListener {
 
         var components = Arrays.asList(
                 new Pair(disconnectButton, clearLogsButton),
-                new Pair(null, enqLinkLogButton),
+                new Pair(null, enqLinkLogCheckbox),
                 new Pair(new JSeparator(), new JSeparator()),
 
                 // mandatory fields
