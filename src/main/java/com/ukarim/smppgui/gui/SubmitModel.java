@@ -1,7 +1,11 @@
 package com.ukarim.smppgui.gui;
 
 import com.ukarim.smppgui.protocol.SmppConstants;
+import com.ukarim.smppgui.protocol.Tlv;
 import com.ukarim.smppgui.protocol.pdu.Address;
+
+import java.util.Collections;
+import java.util.List;
 
 public class SubmitModel {
 
@@ -40,6 +44,8 @@ public class SubmitModel {
     private String schedDeliverTime;
     private String validityPeriod;
     private final DataCoding dataCoding;
+
+    private List<Tlv> optionalTlvs;
 
     public SubmitModel(Address srcAddress, Address destAddress, String shortMessage, DataCoding dataCoding) {
         this.srcAddress = srcAddress;
@@ -110,5 +116,13 @@ public class SubmitModel {
 
     public void setValidityPeriod(String validityPeriod) {
         this.validityPeriod = validityPeriod;
+    }
+
+    public List<Tlv> getOptionalTlvs() {
+        return optionalTlvs != null ? optionalTlvs : Collections.emptyList();
+    }
+
+    public void setOptionalTlvs(List<Tlv> optionalTlvs) {
+        this.optionalTlvs = optionalTlvs;
     }
 }

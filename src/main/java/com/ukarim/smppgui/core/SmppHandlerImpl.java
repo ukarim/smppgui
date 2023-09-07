@@ -192,6 +192,7 @@ public class SmppHandlerImpl implements SmppHandler {
             }
             showInfoDialog("Short message was sent");
         } catch (Exception e) {
+            e.printStackTrace();
             showErrorDialog("Submit error: %s", e.getMessage());
         }
     }
@@ -229,6 +230,7 @@ public class SmppHandlerImpl implements SmppHandler {
         submitSmPdu.setPriorityFlag(submitModel.getPriorityFlag());
         submitSmPdu.setScheduleDeliveryTime(submitModel.getSchedDeliverTime());
         submitSmPdu.setValidityPeriod(submitModel.getValidityPeriod());
+        submitSmPdu.setTlvs(submitModel.getOptionalTlvs());
     }
 
     private void printMsg(String fmt, Object... args) {

@@ -198,7 +198,7 @@ public class SubmitSmPdu implements Pdu {
         len += StringUtils.cStrLen(validityPeriod);
         len += shortMessage.length;
         for (var tlv : tlvs) {
-            len += tlv.getLen();
+            len += (tlv.getLen() + 4); // +2 for tag and +2 for len fields
         }
         return len;
     }
