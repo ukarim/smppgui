@@ -84,7 +84,7 @@ public class EventDispatcher {
                 loggingPane.clearLogs();
                 break;
             case TOGGLE_ENQ_LINK_LOGS:
-                smppHandler.toggleEnqLinkLogs();
+                smppHandler.setShowEnqLinkLogs((boolean) eventAttach);
                 break;
             default: {
                 // NOOP

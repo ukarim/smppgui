@@ -48,8 +48,8 @@ public class SmppHandlerImpl implements SmppHandler {
         this.smppClient = new SmppClient(this);
     }
 
-    public void toggleEnqLinkLogs() {
-        showEnqLinkLogs = !showEnqLinkLogs;
+    public void setShowEnqLinkLogs(boolean b) {
+        showEnqLinkLogs = b;
     }
 
     @Override
