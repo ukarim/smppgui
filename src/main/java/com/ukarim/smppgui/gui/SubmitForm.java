@@ -1,23 +1,19 @@
 package com.ukarim.smppgui.gui;
 
 import com.ukarim.smppgui.gui.SubmitModel.DataCoding;
+import com.ukarim.smppgui.protocol.Tlv;
 import com.ukarim.smppgui.protocol.pdu.Address;
 import com.ukarim.smppgui.util.SmppUtils;
+import com.ukarim.smppgui.util.StringUtils;
+import com.ukarim.smppgui.util.Tuple2;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Arrays;
-import javax.swing.GroupLayout;
+import java.util.List;
+import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JSpinner;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SpinnerListModel;
 import javax.swing.border.EmptyBorder;
 
 import static com.ukarim.smppgui.util.StringUtils.isEmpty;
@@ -47,6 +43,8 @@ class SubmitForm extends JPanel implements ActionListener {
     private final JTextArea shortMessageTextArea = new JTextArea();
 
     private final JSpinner dataCodingSpinner;
+
+    private List<Tuple2<JTextField, JTextField>> optionalTlvFields = new ArrayList<>();
 
     SubmitForm(EventDispatcher eventDispatcher) {
         this.eventDispatcher = eventDispatcher;
@@ -85,6 +83,42 @@ class SubmitForm extends JPanel implements ActionListener {
         spinnerEditor.getTextField().setEditable(false);
         dataCodingSpinner.setEditor(spinnerEditor);
 
+        var horizontalLabelGroup = layout.createParallelGroup(Alignment.TRAILING);
+        var horizontalFieldsGroup = layout.createParallelGroup(Alignment.LEADING);
+        var verticalGroup = layout.createSequentialGroup();
+
+        var addTlvButton = new JButton("Add optional TLV");
+        addTlvButton.addActionListener((e) -> {
+            var tlvName = new JTextField();
+            var tlvValue = new JTextField();
+
+            var p = new JPanel();
+            p.setLayout(new BoxLayout(p, BoxLayout.X_AXIS));
+            p.add(tlvName);
+            p.add(tlvValue);
+
+            // update UI
+            JLabel infoLabel = null;
+            if (optionalTlvFields.isEmpty()) {
+                infoLabel = new JLabel("Put in hex format");
+                horizontalLabelGroup.addComponent(infoLabel);
+            }
+            horizontalFieldsGroup.addComponent(p);
+            var vPair = layout.createParallelGroup(Alignment.BASELINE);
+            if (infoLabel != null) {
+                vPair.addComponent(infoLabel);
+            }
+            vPair.addComponent(p);
+            verticalGroup.addGroup(vPair);
+
+            // add to interest list
+            optionalTlvFields.add(Tuple2.of(tlvName, tlvValue));
+
+            // repaint
+            this.revalidate();
+            this.repaint();
+        });
+
         var components = Arrays.asList(
                 new Pair(disconnectButton, clearLogsButton),
                 new Pair(null, enqLinkLogCheckbox),
@@ -107,14 +141,11 @@ class SubmitForm extends JPanel implements ActionListener {
                 new Pair(new JLabel("priority_flag"), priorityFlagField),
                 new Pair(new JLabel("sched_deliver_time"), schedDeliveryTimeField),
                 new Pair(new JLabel("validity_period"), validityPeriodField),
-                new Pair(null, submitButton)
+                new Pair(addTlvButton, submitButton)
         );
 
         // Setup horizontal layout
         var horizontalGroup = layout.createSequentialGroup();
-
-        var horizontalLabelGroup = layout.createParallelGroup(Alignment.TRAILING);
-        var horizontalFieldsGroup = layout.createParallelGroup(Alignment.LEADING);
 
         components.forEach(pair -> {
             var component1 = pair.component1;
@@ -133,7 +164,6 @@ class SubmitForm extends JPanel implements ActionListener {
 
         // Setup vertical layout
 
-        var verticalGroup = layout.createSequentialGroup();
         components.forEach(pair -> {
             var component1 = pair.component1;
             var component2 = pair.component2;
@@ -152,8 +182,6 @@ class SubmitForm extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent event) {
-        // TODO validate and sent submitSm
-
         // source address
         String srcAddr = srcAddrField.getText();
         if (isEmpty(srcAddr)) {
@@ -256,6 +284,34 @@ class SubmitForm extends JPanel implements ActionListener {
             validityPeriod = validityPeriodText;
         }
 
+        List<Tlv> optionalTlvs = new ArrayList<>();
+        for (Tuple2<JTextField, JTextField> tlvFields : optionalTlvFields) {
+            String tlvNameHex = tlvFields.getFirst().getText();
+            String tlvValueHex = tlvFields.getSecond().getText();
+            if (StringUtils.isEmpty(tlvNameHex)) {
+                continue;
+            }
+            short tlvName;
+            try {
+                tlvName = StringUtils.shortFromHex(tlvNameHex);
+            } catch (Exception e) {
+                showError("Invalid TLV tag %s", tlvNameHex);
+                return;
+            }
+            byte[] tlvValue;
+            try {
+                tlvValue = StringUtils.bytesFromHex(tlvValueHex);
+                if (tlvValue.length > Short.MAX_VALUE) {
+                    showError("Invalid value for TLV with tag %s. Too long");
+                    return;
+                }
+            } catch (Exception e) {
+                showError("Invalid value for TLV with tag %s", tlvNameHex);
+                return;
+            }
+            optionalTlvs.add(new Tlv(tlvName, (short) tlvValue.length, tlvValue));
+        }
+
         var submitModel = new SubmitModel(
                 new Address(srcAddrTon, srcAddrNpi, srcAddr.trim()),
                 new Address(destAddrTon, destAddrNpi, destAddr.trim()),
@@ -268,6 +324,7 @@ class SubmitForm extends JPanel implements ActionListener {
         submitModel.setServiceType(serviceTypeField.getText());
         submitModel.setSchedDeliverTime(schedDeliverTime);
         submitModel.setValidityPeriod(validityPeriod);
+        submitModel.setOptionalTlvs(optionalTlvs);
 
         eventDispatcher.dispatch(EventType.DO_SUBMIT, submitModel);
     }

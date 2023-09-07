@@ -34,4 +34,23 @@ public class StringUtils {
     public static boolean isEmpty(String s) {
         return s == null || s.isBlank();
     }
+
+    public static short shortFromHex(String str) {
+        byte[] bytes = bytesFromHex(str);
+        byte b1 = bytes[0];
+        byte b2 = bytes[1];
+        return (short) (((b1 & 0xFF) << 8) | (b2 & 0xFF));
+    }
+
+    public static byte[] bytesFromHex(String str) {
+        str = str.replaceAll("0x", "");
+        int len = str.length();
+        byte[] out = new byte[len/2];
+        for (int i = 0; i < len; i = i + 2) {
+            char c1 = str.charAt(i);
+            char c2 = str.charAt(i + 1);
+            out[i/2] = (byte) Integer.parseInt(("" + c1) + c2, 16);
+        }
+        return out;
+    }
 }
