@@ -67,7 +67,6 @@ public final class CsvPduParser {
         Address dest = parseAddress(values.get(1));
         String shortMessage = values.get(2);
         return new SubmitSmPdu(
-                0,
                 src,
                 dest,
                 shortMessage.getBytes(StandardCharsets.UTF_16BE),

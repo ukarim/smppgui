@@ -1,6 +1,9 @@
 package com.ukarim.smppgui.protocol;
 
 import com.ukarim.smppgui.protocol.pdu.Pdu;
+import com.ukarim.smppgui.protocol.pdu.ReqPdu;
+import com.ukarim.smppgui.protocol.pdu.RespPdu;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -17,9 +20,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class SmppClient {
 
+    private final AtomicInteger seqGen = new AtomicInteger();
     private final AtomicBoolean active = new AtomicBoolean(true);
 
     private final ExecutorService threadPool = Executors.newFixedThreadPool(1);
@@ -34,7 +39,16 @@ public final class SmppClient {
         this.smppHandler = smppHandler;
     }
 
-    public void sendPdu(Pdu pdu) throws IOException {
+    public void sendReq(ReqPdu req) throws IOException {
+        req.setSeqNum(seqGen.incrementAndGet());
+        sendPdu(req);
+    }
+
+    public void sendResp(RespPdu resp) throws IOException {
+        sendPdu(resp);
+    }
+
+    private void sendPdu(Pdu pdu) throws IOException {
         if (channel == null) {
             throw new IllegalStateException("Smpp client not started");
         }
@@ -43,12 +57,13 @@ public final class SmppClient {
         channel.write(buffer);
     }
 
-    public Pdu sendPduSync(Pdu pdu, long timeoutMillis) throws IOException, TimeoutException {
-        int seqNum = pdu.getSeqNum();
+    public Pdu sendReqSync(ReqPdu req, long timeoutMillis) throws IOException, TimeoutException {
+        final int seqNum = seqGen.incrementAndGet();
+        req.setSeqNum(seqNum);
         var respFuture = new CompletableFuture<Pdu>();
         syncRespFutures.put(seqNum, respFuture);
         try {
-            sendPdu(pdu);
+            sendPdu(req);
             return respFuture.get(timeoutMillis, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Unexpected error while waiting response pdu", e);
@@ -70,6 +85,7 @@ public final class SmppClient {
         } catch (Exception e) {
             // don't care
         } finally {
+            seqGen.set(0);
             active.set(false);
             channel = null;
         }

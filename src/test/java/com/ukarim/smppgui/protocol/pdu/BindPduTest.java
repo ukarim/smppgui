@@ -21,7 +21,8 @@ class BindPduTest {
                 0x00,
                 0x00
         };
-        var bindPdu = new BindPdu(SmppCmd.BIND_TRANSMITTER, 234, "test_user", "secret");
+        var bindPdu = new BindPdu(SmppCmd.BIND_TRANSMITTER, "test_user", "secret");
+        bindPdu.setSeqNum(234);
         bindPdu.setSystemType("smppgui");
         var actual = bindPdu.toByteBuffer().array();
         Assertions.assertArrayEquals(expected, actual);

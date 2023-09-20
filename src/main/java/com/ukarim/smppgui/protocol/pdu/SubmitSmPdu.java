@@ -9,11 +9,11 @@ import java.nio.ByteOrder;
 import java.util.Collections;
 import java.util.List;
 
-public class SubmitSmPdu implements Pdu {
+public class SubmitSmPdu implements ReqPdu {
 
     private final SmppStatus sts = SmppStatus.ESME_ROK;
 
-    private final int seqNum;
+    private int seqNum;
 
     private final Address srcAddress;
 
@@ -39,8 +39,7 @@ public class SubmitSmPdu implements Pdu {
 
     private List<Tlv> tlvs = Collections.emptyList();
 
-    public SubmitSmPdu(int seqNum, Address srcAddress, Address destAddress, byte[] shortMessage, byte dataCoding) {
-        this.seqNum = seqNum;
+    public SubmitSmPdu(Address srcAddress, Address destAddress, byte[] shortMessage, byte dataCoding) {
         this.srcAddress = srcAddress;
         this.destAddress = destAddress;
         this.shortMessage = shortMessage;
@@ -140,6 +139,11 @@ public class SubmitSmPdu implements Pdu {
     @Override
     public int getSeqNum() {
         return seqNum;
+    }
+
+    @Override
+    public void setSeqNum(int seqNum) {
+        this.seqNum = seqNum;
     }
 
     @Override

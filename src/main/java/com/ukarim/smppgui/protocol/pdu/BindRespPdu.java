@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 
-public class BindRespPdu implements Pdu {
+public class BindRespPdu implements RespPdu {
 
     private final SmppCmd cmd;
     private final SmppStatus sts;

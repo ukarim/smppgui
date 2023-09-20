@@ -7,11 +7,11 @@ import com.ukarim.smppgui.util.StringUtils;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class BindPdu implements Pdu {
+public class BindPdu implements ReqPdu {
 
     private final SmppCmd cmd;
     private final SmppStatus sts = SmppStatus.ESME_ROK; // always OK for this type of PDU
-    private final int seqNum;
+    private int seqNum;
     private final String systemId;
     private final String password;
     private String systemType;
@@ -19,9 +19,8 @@ public class BindPdu implements Pdu {
     private byte npi = 0;
     private String addrRange = null;
 
-    public BindPdu(SmppCmd cmd, int seqNum, String systemId, String password) {
+    public BindPdu(SmppCmd cmd, String systemId, String password) {
         this.cmd = cmd;
-        this.seqNum = seqNum;
         this.systemId = systemId;
         this.password = password;
     }
@@ -75,6 +74,11 @@ public class BindPdu implements Pdu {
     @Override
     public int getSeqNum() {
         return seqNum;
+    }
+
+    @Override
+    public void setSeqNum(int seqNum) {
+        this.seqNum = seqNum;
     }
 
     @Override
