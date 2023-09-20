@@ -5,16 +5,14 @@ import com.ukarim.smppgui.protocol.SmppStatus;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class HeaderPdu implements Pdu {
+public class HeaderPdu implements ReqPdu, RespPdu {
 
     private final SmppCmd cmd;
     private final SmppStatus sts;
-    private final int seqNum;
+    private int seqNum;
 
-    public HeaderPdu(SmppCmd cmd, int seqNum) {
-        this.cmd = cmd;
-        this.sts = SmppStatus.ESME_ROK;
-        this.seqNum = seqNum;
+    public HeaderPdu(SmppCmd cmd) {
+        this(cmd, SmppStatus.ESME_ROK, 0);
     }
 
     public HeaderPdu(SmppCmd cmd, SmppStatus sts, int seqNum) {
@@ -36,6 +34,11 @@ public class HeaderPdu implements Pdu {
     @Override
     public int getSeqNum() {
         return seqNum;
+    }
+
+    @Override
+    public void setSeqNum(int seqNum) {
+        this.seqNum = seqNum;
     }
 
     @Override

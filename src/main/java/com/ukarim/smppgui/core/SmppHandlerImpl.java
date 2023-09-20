@@ -26,15 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class SmppHandlerImpl implements SmppHandler {
 
     private static final int MAX_SHORT_MSG_LEN = 140;
 
     private final long TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
-
-    private final AtomicInteger seqNumGenerator = new AtomicInteger();
 
     private final EventDispatcher eventDispatcher;
     private final SmppClient smppClient;
@@ -82,7 +79,6 @@ public class SmppHandlerImpl implements SmppHandler {
 
     private Pdu handlePduInternal(Pdu pdu) {
         SmppCmd cmd = pdu.getCmd();
-        SmppStatus sts = pdu.getSts();
         int seqNum = pdu.getSeqNum();
         if (SmppCmd.ENQUIRE_LINK.equals(cmd)) {
             // always respond to health check requests with OK status
@@ -116,13 +112,12 @@ public class SmppHandlerImpl implements SmppHandler {
                 cmd = SmppCmd.BIND_TRANSMITTER;
             }
 
-            int seqNum = nextSeqNum();
-            BindPdu bindReq = new BindPdu(cmd, seqNum, systemId, password);
+            BindPdu bindReq = new BindPdu(cmd, systemId, password);
             bindReq.setSystemType(systemType);
 
             // send bind request
+            BindRespPdu bindResp = (BindRespPdu) smppClient.sendReqSync(bindReq, TIMEOUT_MILLIS);
             printMsg("Pdu sent:\n%s", fmtPdu(bindReq, StandardCharsets.US_ASCII));
-            BindRespPdu bindResp = (BindRespPdu) smppClient.sendPduSync(bindReq, TIMEOUT_MILLIS);
             printMsg("Pdu received:\n%s", fmtPdu(bindResp));
             SmppStatus respSts = bindResp.getSts();
             if (SmppStatus.ESME_ROK.equals(respSts)) {
@@ -142,9 +137,9 @@ public class SmppHandlerImpl implements SmppHandler {
 
     public void disconnect() {
         try {
-            var unbind = new HeaderPdu(SmppCmd.UNBIND, nextSeqNum());
+            var unbind = new HeaderPdu(SmppCmd.UNBIND);
+            Pdu unbindResp = smppClient.sendReqSync(unbind, TIMEOUT_MILLIS);
             printMsg("Pdu sent:\n%s", fmtPdu(unbind));
-            Pdu unbindResp = smppClient.sendPduSync(unbind, TIMEOUT_MILLIS);
             printMsg("Pdu received:\n%s", fmtPdu(unbindResp));
         } catch (Exception e) {
             showErrorDialog("Disconnect error: %s", e.getMessage());
@@ -163,7 +158,6 @@ public class SmppHandlerImpl implements SmppHandler {
                 List<byte[]> udhParts = SmppUtils.toUdhParts(smBytes);
                 for (byte[] p : udhParts) {
                     var submitSmPdu = new SubmitSmPdu(
-                            nextSeqNum(),
                             submitModel.getSrcAddress(),
                             submitModel.getDestAddress(),
                             p,
@@ -175,7 +169,6 @@ public class SmppHandlerImpl implements SmppHandler {
                 }
             } else {
                 var submitSmPdu = new SubmitSmPdu(
-                        nextSeqNum(),
                         submitModel.getSrcAddress(),
                         submitModel.getDestAddress(),
                         smBytes,
@@ -187,7 +180,7 @@ public class SmppHandlerImpl implements SmppHandler {
             }
 
             for (var submitSmPdu : pduList) {
-                smppClient.sendPdu(submitSmPdu);
+                smppClient.sendReq(submitSmPdu);
                 printMsg("Pdu sent:\n%s", fmtPdu(submitSmPdu, getCharset(dataCoding)));
             }
             showInfoDialog("Short message was sent");
@@ -243,10 +236,6 @@ public class SmppHandlerImpl implements SmppHandler {
 
     private void showInfoDialog(String fmt, Object... args) {
         eventDispatcher.dispatch(EventType.SHOW_INFO, String.format(fmt, args));
-    }
-
-    private int nextSeqNum() {
-        return seqNumGenerator.incrementAndGet();
     }
 
     private String fmtPdu(Pdu pdu) {

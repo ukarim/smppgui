@@ -4,7 +4,7 @@ import com.ukarim.smppgui.protocol.SmppCmd;
 import com.ukarim.smppgui.protocol.SmppStatus;
 import java.nio.ByteBuffer;
 
-public class SubmitSmRespPdu implements Pdu {
+public class SubmitSmRespPdu implements RespPdu {
 
     private final SmppStatus sts;
 
