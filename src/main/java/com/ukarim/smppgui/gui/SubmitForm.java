@@ -226,10 +226,10 @@ class SubmitForm extends JPanel implements ActionListener {
             return;
         }
 
+        boolean isShortMessageSet = false;
         String shortMessage = shortMessageTextArea.getText();
-        if (isEmpty(shortMessage)) {
-            showError("'short_message' not provided");
-            return;
+        if (!isEmpty(shortMessage)) {
+            isShortMessageSet = true;
         }
 
         byte registeredDelivery = 0;
@@ -284,6 +284,7 @@ class SubmitForm extends JPanel implements ActionListener {
             validityPeriod = validityPeriodText;
         }
 
+        boolean isMessagePayloadSet = false;
         List<Tlv> optionalTlvs = new ArrayList<>();
         for (Tuple2<JTextField, JTextField> tlvFields : optionalTlvFields) {
             String tlvNameHex = tlvFields.getFirst().getText();
@@ -294,6 +295,10 @@ class SubmitForm extends JPanel implements ActionListener {
             short tlvName;
             try {
                 tlvName = StringUtils.shortFromHex(tlvNameHex);
+                //checks for the message_payload
+                if(tlvName == 1060) {
+                    isMessagePayloadSet = true;
+                }
             } catch (Exception e) {
                 showError("Invalid TLV tag %s", tlvNameHex);
                 return;
@@ -310,6 +315,16 @@ class SubmitForm extends JPanel implements ActionListener {
                 return;
             }
             optionalTlvs.add(new Tlv(tlvName, (short) tlvValue.length, tlvValue));
+        }
+
+        if(isShortMessageSet && isMessagePayloadSet){
+            showError("Both 'short_message' and 'message_payload'(0x0424:TLV) cannot be set together.");
+            return;
+        }
+
+        if(!isShortMessageSet && !isMessagePayloadSet){
+            showError("'short_message' not provided");
+            return;
         }
 
         var submitModel = new SubmitModel(
