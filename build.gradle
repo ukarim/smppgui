@@ -10,7 +10,7 @@ repositories {
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
-    version = '2024feb2'
+    version = '2024feb9'
 }
 
 def smppguiFilename = 'smppgui.jar'
