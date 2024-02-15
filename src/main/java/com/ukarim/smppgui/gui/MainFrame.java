@@ -95,7 +95,7 @@ public class MainFrame extends JFrame {
         JTextArea jTextAreaText = new JTextArea();
         jTextAreaText.setLineWrap(true);
         jTextAreaText.setRows(5);
-        jTextAreaText.setSize(500, 1);
+        jTextAreaText.setColumns(30);
         JScrollPane jScrollPaneText = new JScrollPane(jTextAreaText);
         jScrollPaneText.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
@@ -135,8 +135,8 @@ public class MainFrame extends JFrame {
                 JTextArea jTextAreaConvertedHexValue = new JTextArea(convertedHexValue);
                 jTextAreaConvertedHexValue.setEditable(false);
                 jTextAreaConvertedHexValue.setRows(5);
+                jTextAreaConvertedHexValue.setColumns(30);
                 jTextAreaConvertedHexValue.setLineWrap(true);
-                jTextAreaConvertedHexValue.setSize(500, 1);
                 JScrollPane scroll = new JScrollPane(jTextAreaConvertedHexValue);
                 scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
