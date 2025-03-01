@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 
 public class StringUtils {
 
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+
     private StringUtils() {}
 
     public static void putCStr(ByteBuffer buffer, String s) {
@@ -52,5 +54,18 @@ public class StringUtils {
             out[i/2] = (byte) Integer.parseInt(("" + c1) + c2, 16);
         }
         return out;
+    }
+
+    public static String toHexString(byte... bytes) {
+        if (bytes == null) {
+            return "null";
+        }
+        char[] hexChars = new char[bytes.length * 2];
+        for (int i = 0; i < bytes.length; i++) {
+            int v = bytes[i] & 0xFF;
+            hexChars[i * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[i * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
     }
 }

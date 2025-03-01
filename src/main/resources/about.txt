@@ -1,6 +1,6 @@
 smppgui - simple SMPP GUI client
 
-Source code can be found at github.com/ukarim/smppgui
+Source code can be found at https://github.com/ukarim/smppgui
 Visit smpp.org for more information on SMPP protocol
 
 {buildInfo}

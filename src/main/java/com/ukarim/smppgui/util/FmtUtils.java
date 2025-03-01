@@ -24,8 +24,6 @@ import java.util.function.Function;
 
 public final class FmtUtils {
 
-    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-
     private static final Map<Short, Tuple2<String, Function<byte[], String>>> KNOWN_TLVS;
 
     static {
@@ -78,35 +76,22 @@ public final class FmtUtils {
 
     private FmtUtils() {}
 
-    private static String toHexString(byte... bytes) {
-        if (bytes == null) {
-            return "null";
-        }
-        char[] hexChars = new char[bytes.length * 2];
-        for (int i = 0; i < bytes.length; i++) {
-            int v = bytes[i] & 0xFF;
-            hexChars[i * 2] = HEX_ARRAY[v >>> 4];
-            hexChars[i * 2 + 1] = HEX_ARRAY[v & 0x0F];
-        }
-        return new String(hexChars);
-    }
-
     public static String fmtInt(int n) {
         byte b4 = (byte) (n >> 24);
         byte b3 = (byte) (n >> 16);
         byte b2 = (byte) (n >> 8);
         byte b1 = (byte) (n >> 0);
-        return "0x" + toHexString(b4, b3, b2, b1);
+        return "0x" + StringUtils.toHexString(b4, b3, b2, b1);
     }
 
     public static String fmtShort(short n) {
         byte b2 = (byte) (n >> 8);
         byte b1 = (byte) (n >> 0);
-        return "0x" + toHexString(b2, b1);
+        return "0x" + StringUtils.toHexString(b2, b1);
     }
 
     public static String fmtByte(byte n) {
-        return "0x" + toHexString(n);
+        return "0x" + StringUtils.toHexString(n);
     }
 
     public static String fmtPdu(Pdu pdu, Charset defaultCharset) {
@@ -231,7 +216,7 @@ public final class FmtUtils {
     }
 
     private static String fmtByteArr(byte[] b) {
-        return "hex(" + toHexString(b) + ")";
+        return "hex(" + StringUtils.toHexString(b) + ")";
     }
 
     private static String fmtCStr(byte[] b) {
