@@ -1,5 +1,8 @@
 package com.ukarim.smppgui.core;
 
+import static java.lang.System.Logger.Level.ERROR;
+
+import com.ukarim.smppgui.core.Config.SavedLoginData;
 import com.ukarim.smppgui.gui.EventDispatcher;
 import com.ukarim.smppgui.gui.EventType;
 import com.ukarim.smppgui.gui.LoginModel;
@@ -28,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class SmppHandlerImpl implements SmppHandler {
+
+    private static final System.Logger logger = System.getLogger(SmppHandlerImpl.class.getName());
 
     private static final int MAX_SHORT_MSG_LEN = 140;
 
@@ -122,6 +127,9 @@ public class SmppHandlerImpl implements SmppHandler {
             SmppStatus respSts = bindResp.getSts();
             if (SmppStatus.ESME_ROK.equals(respSts)) {
                 eventDispatcher.dispatch(EventType.SHOW_SUBMIT_FORM);
+                if (loginModel.isRemember()) {
+                    eventDispatcher.dispatch(EventType.SAVE_LOGIN_DATA, toSavedData(loginModel));
+                }
             } else {
                 smppClient.disconnect();
                 showErrorDialog("Connect failed: %s", respSts.getStatusDesc());
@@ -185,7 +193,7 @@ public class SmppHandlerImpl implements SmppHandler {
             }
             showInfoDialog("Short message was sent");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(ERROR, "Error during message submit", e);
             showErrorDialog("Submit error: %s", e.getMessage());
         }
     }
@@ -251,5 +259,16 @@ public class SmppHandlerImpl implements SmppHandler {
             return showEnqLinkLogs;
         }
         return true;
+    }
+
+    private static SavedLoginData toSavedData(LoginModel loginModel) {
+        return new SavedLoginData(
+            loginModel.getHost(),
+            loginModel.getPort(),
+            loginModel.getSystemId(),
+            loginModel.getSessionType().name(),
+            loginModel.getSystemType(),
+            loginModel.getDefaultCharset()
+        );
     }
 }

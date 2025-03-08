@@ -1,5 +1,6 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.core.Config;
 import java.awt.CardLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -13,9 +14,9 @@ class FormsPane extends JScrollPane {
     private final JPanel container = new JPanel();
     private final CardLayout containerLayout = new CardLayout();
 
-    FormsPane(EventDispatcher eventDispatcher) {
+    FormsPane(EventDispatcher eventDispatcher, Config config) {
         super();
-        var loginForm = new LoginForm(eventDispatcher);
+        var loginForm = new LoginForm(eventDispatcher, config);
         var submitForm = new SubmitForm(eventDispatcher);
 
         setBorder(new EmptyBorder(0, 0, 0, 0));

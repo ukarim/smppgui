@@ -1,7 +1,7 @@
 package com.ukarim.smppgui.gui;
 
-import com.ukarim.smppgui.util.CharsetWrapper;
 import com.ukarim.smppgui.util.GsmCharset;
+import com.ukarim.smppgui.util.SmppCharsets;
 import com.ukarim.smppgui.util.StringUtils;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -9,7 +9,6 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -28,15 +27,7 @@ class HexToolPanel extends JPanel {
     var scrollPane = new JScrollPane(textArea);
     scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-    Charset[] charsets = {
-        GsmCharset.INSTANCE_8BIT,
-        GsmCharset.INSTANCE_7BIT,
-        new CharsetWrapper("IA5:ASCII", StandardCharsets.US_ASCII),
-        new CharsetWrapper("UCS2", StandardCharsets.UTF_16BE),
-        new CharsetWrapper("LATIN-1:ISO-8859-1", StandardCharsets.ISO_8859_1),
-    };
-
-    var spinnerModel = new SpinnerListModel(charsets);
+    var spinnerModel = new SpinnerListModel(SmppCharsets.getCharsets());
     spinnerModel.setValue(GsmCharset.INSTANCE_8BIT); // set default value
     var dataCodingSpinner = new JSpinner(spinnerModel);
     var spinnerEditor = new JSpinner.DefaultEditor(dataCodingSpinner);
