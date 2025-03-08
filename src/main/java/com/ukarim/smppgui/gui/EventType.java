@@ -11,4 +11,5 @@ public enum EventType {
     DO_SUBMIT,
     CLEAR_LOGS,
     TOGGLE_ENQ_LINK_LOGS,
+    SAVE_LOGIN_DATA,
 }

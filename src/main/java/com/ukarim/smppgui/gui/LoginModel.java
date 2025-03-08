@@ -18,8 +18,10 @@ public class LoginModel {
 
     private final Charset defaultCharset;
 
+    private final boolean remember;
+
     LoginModel(String host, int port, String systemId, char[] password, SessionType sessionType, String systemType,
-               Charset defaultCharset) {
+               Charset defaultCharset, boolean remember) {
         this.host = host;
         this.port = port;
         this.systemId = systemId;
@@ -27,6 +29,7 @@ public class LoginModel {
         this.sessionType = sessionType;
         this.systemType = systemType;
         this.defaultCharset = defaultCharset;
+        this.remember = remember;
     }
 
     public String getHost() {
@@ -55,6 +58,10 @@ public class LoginModel {
 
     public Charset getDefaultCharset() {
         return defaultCharset;
+    }
+
+    public boolean isRemember() {
+        return remember;
     }
 
     public enum SessionType {

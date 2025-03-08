@@ -1,5 +1,6 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.core.Config;
 import com.ukarim.smppgui.core.SmppHandlerImpl;
 import com.ukarim.smppgui.util.Resources;
 
@@ -29,10 +30,11 @@ public class MainFrame extends JFrame {
 
         setJMenuBar(buildMenuBar());
 
-        var eventDispatcher = new EventDispatcher();
+        var config = Config.loadConfig();
+        var eventDispatcher = new EventDispatcher(config);
 
         var loggingPane = new LoggingPane();
-        var formsPane = new FormsPane(eventDispatcher);
+        var formsPane = new FormsPane(eventDispatcher, config);
         var smppHandler = new SmppHandlerImpl(eventDispatcher);
 
         eventDispatcher.setLoggingPane(loggingPane);

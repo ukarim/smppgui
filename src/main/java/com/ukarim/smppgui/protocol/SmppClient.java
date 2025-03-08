@@ -1,8 +1,9 @@
 package com.ukarim.smppgui.protocol;
 
+import static java.lang.System.Logger.Level.ERROR;
+
 import com.ukarim.smppgui.protocol.pdu.Pdu;
 import com.ukarim.smppgui.protocol.pdu.ReqPdu;
-import com.ukarim.smppgui.protocol.pdu.RespPdu;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -24,6 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class SmppClient {
 
+    private static final System.Logger logger = System.getLogger(SmppClient.class.getName());
+
     private final AtomicInteger seqGen = new AtomicInteger();
     private final AtomicBoolean active = new AtomicBoolean(true);
 
@@ -42,10 +45,6 @@ public final class SmppClient {
     public void sendReq(ReqPdu req) throws IOException {
         req.setSeqNum(seqGen.incrementAndGet());
         sendPdu(req);
-    }
-
-    public void sendResp(RespPdu resp) throws IOException {
-        sendPdu(resp);
     }
 
     private void sendPdu(Pdu pdu) throws IOException {
@@ -115,7 +114,7 @@ public final class SmppClient {
                     try {
                          pdus = PduParser.parsePdu(buffer);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.log(ERROR, "Error during PDU parsing", e);
                         smppHandler.handlePdu(null, new SmppException(e, "Pdu parsing error"));
                         disconnect();
                         return;

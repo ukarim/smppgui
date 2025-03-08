@@ -1,5 +1,7 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.core.Config;
+import com.ukarim.smppgui.core.Config.SavedLoginData;
 import com.ukarim.smppgui.core.SmppHandlerImpl;
 import com.ukarim.smppgui.util.Resources;
 import java.util.concurrent.ExecutorService;
@@ -13,10 +15,15 @@ public class EventDispatcher {
     private static final ImageIcon INFO_ICON = Resources.loadIcon("/info.png");
     private static final ImageIcon ERROR_ICON = Resources.loadIcon("/error.png");
 
+    private final Config config;
     private final ExecutorService workerThread = Executors.newSingleThreadExecutor();
     private LoggingPane loggingPane;
     private FormsPane formsPane;
     private SmppHandlerImpl smppHandler;
+
+    public EventDispatcher(Config config) {
+        this.config = config;
+    }
 
     void setLoggingPane(LoggingPane loggingPane) {
         this.loggingPane = loggingPane;
@@ -85,6 +92,10 @@ public class EventDispatcher {
                 break;
             case TOGGLE_ENQ_LINK_LOGS:
                 smppHandler.setShowEnqLinkLogs((boolean) eventAttach);
+                break;
+            case SAVE_LOGIN_DATA:
+                // Do save in background thread (blocking task)
+                workerThread.execute(() -> config.saveLoginData((SavedLoginData) eventAttach));
                 break;
             default: {
                 // NOOP

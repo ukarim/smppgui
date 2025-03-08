@@ -1,16 +1,18 @@
 package com.ukarim.smppgui.gui;
 
+import com.ukarim.smppgui.core.Config;
 import com.ukarim.smppgui.gui.LoginModel.SessionType;
-import com.ukarim.smppgui.util.CharsetWrapper;
 import com.ukarim.smppgui.util.GsmCharset;
-
+import com.ukarim.smppgui.util.SmppCharsets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -28,11 +30,11 @@ class LoginForm extends JPanel implements ActionListener {
     private final JTextField systemIdField;
     private final JPasswordField passwordField;
     private final JTextField systemTypeField;
-    private final JButton button;
     private final JSpinner sessionTypeSpinner;
     private final JSpinner charsetSpinner;
+    private final JCheckBox rememberCheckbox;
 
-    LoginForm(EventDispatcher eventDispatcher) {
+    LoginForm(EventDispatcher eventDispatcher, Config config) {
         this.eventDispatcher = eventDispatcher;
         setBorder(new EmptyBorder(10, 10, 10, 10));
         var layout = new GroupLayout(this);
@@ -54,26 +56,37 @@ class LoginForm extends JPanel implements ActionListener {
         passwordField = new JPasswordField();
 
         var sessionTypeLabel = new JLabel("Session type");
-        sessionTypeSpinner = createSpinner(SessionType.values(), SessionType.TRANSMITTER);
+        sessionTypeSpinner = createSpinner(List.of(SessionType.values()), SessionType.TRANSMITTER);
 
         var serviceTypeLabel = new JLabel("System type");
         systemTypeField = new JTextField();
 
         var dataCodingLabel = new JLabel("Default data coding");
-        Charset[] charsets = {
-                GsmCharset.INSTANCE_8BIT,
-                GsmCharset.INSTANCE_7BIT,
-                new CharsetWrapper("IA5:ASCII", StandardCharsets.US_ASCII),
-                new CharsetWrapper("UCS2", StandardCharsets.UTF_16BE),
-                new CharsetWrapper("LATIN-1:ISO-8859-1", StandardCharsets.ISO_8859_1),
-        };
-        charsetSpinner = createSpinner(charsets, GsmCharset.INSTANCE_8BIT);
+        charsetSpinner = createSpinner(SmppCharsets.getCharsets(), GsmCharset.INSTANCE_8BIT);
 
-        button = new JButton("Connect");
+        rememberCheckbox = new JCheckBox("Remember connection");
+
+        var button = new JButton("Connect");
         button.addActionListener(this);
+
+        var loginDataSelectBoxLabel = new JLabel("Saved connections");
+        var loginDataSelectBox = new JComboBox<>(config.getSavedLoginData().toArray());
+        loginDataSelectBox.addActionListener(e -> {
+            var loginData = (Config.SavedLoginData) loginDataSelectBox.getSelectedItem();
+            if (loginData == null) {
+                return;
+            }
+            hostField.setText(loginData.getHost());
+            portField.setText(Integer.toString(loginData.getPort()));
+            systemIdField.setText(loginData.getSystemId());
+            sessionTypeSpinner.setValue(SessionType.valueOf(loginData.getSessionType()));
+            systemTypeField.setText(loginData.getSystemType());
+            charsetSpinner.setValue(loginData.getDefaultCharset());
+        });
 
         layout.setHorizontalGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(Alignment.TRAILING)
+                        .addComponent(loginDataSelectBoxLabel)
                         .addComponent(hostLabel)
                         .addComponent(portLabel)
                         .addComponent(systemIdLabel)
@@ -83,6 +96,7 @@ class LoginForm extends JPanel implements ActionListener {
                         .addComponent(dataCodingLabel)
                 )
                 .addGroup(layout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(loginDataSelectBox)
                         .addComponent(hostField)
                         .addComponent(portField)
                         .addComponent(systemIdField)
@@ -90,11 +104,16 @@ class LoginForm extends JPanel implements ActionListener {
                         .addComponent(sessionTypeSpinner)
                         .addComponent(systemTypeField)
                         .addComponent(charsetSpinner)
+                        .addComponent(rememberCheckbox)
                         .addComponent(button)
                 )
         );
 
         layout.setVerticalGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                    .addComponent(loginDataSelectBoxLabel)
+                    .addComponent(loginDataSelectBox)
+                )
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(hostLabel)
                         .addComponent(hostField)
@@ -122,6 +141,9 @@ class LoginForm extends JPanel implements ActionListener {
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(dataCodingLabel)
                         .addComponent(charsetSpinner)
+                )
+                .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(rememberCheckbox)
                 )
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(button)
@@ -168,13 +190,15 @@ class LoginForm extends JPanel implements ActionListener {
             return;
         }
 
-        var sessionType = (LoginModel.SessionType) sessionTypeSpinner.getModel().getValue();
+        var sessionType = (SessionType) sessionTypeSpinner.getModel().getValue();
         var charset = (Charset) charsetSpinner.getModel().getValue();
 
         String systemType = systemTypeField.getText();
 
+        boolean remember = rememberCheckbox.isSelected();
+
         eventDispatcher.dispatch(EventType.DO_LOGIN,
-                new LoginModel(host, portNum, systemId, password, sessionType, systemType, charset));
+                new LoginModel(host, portNum, systemId, password, sessionType, systemType, charset, remember));
 
         // cleanup pwd
         passwordField.setText("");
@@ -184,7 +208,7 @@ class LoginForm extends JPanel implements ActionListener {
         eventDispatcher.dispatch(EventType.SHOW_ERROR, msg);
     }
 
-    private JSpinner createSpinner(Object[] values, Object initialValue) {
+    private JSpinner createSpinner(List<?> values, Object initialValue) {
         var spinnerModel = new SpinnerListModel(values);
         spinnerModel.setValue(initialValue); // set initial value
         var spinner = new JSpinner(spinnerModel);
