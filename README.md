@@ -22,3 +22,15 @@ or build it manually using gradle: `gradle build`
 1. Build custom java runtime `gradle jlink`
 2. Launch smppgui using the generated bash script: `./smppgui/bin/smppgui`
 3. Finally, archive the generated _smppgui_ directory and distribute it. Thus, end users do not need to pre-install java on their computers.
+
+### Using custom Look&Feel
+
+If the GUI looks ugly (this is the case in Linux environments), then you can apply custom Look&Feel.
+
+For example, [FlatLaf](https://www.formdev.com/flatlaf/).
+
+1. Download FlatLaf from MavenCentral [flatlaf-3.5.4.jar](https://repo1.maven.org/maven2/com/formdev/flatlaf/3.5.4/flatlaf-3.5.4.jar)
+2. Use following command to launch smppgui
+   ```
+   java -cp flatlaf-3.5.4.jar:smppgui.jar -Dswing.defaultlaf=com.formdev.flatlaf.FlatLightLaf com.ukarim.smppgui.Main
+   ```
