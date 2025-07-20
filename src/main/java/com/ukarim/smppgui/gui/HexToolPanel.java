@@ -19,7 +19,7 @@ import javax.swing.SpinnerListModel;
 
 class HexToolPanel extends JPanel {
 
-  HexToolPanel() {
+  HexToolPanel(boolean textToHex) {
     var textArea = new JTextArea();
     textArea.setLineWrap(true);
     textArea.setRows(5);
@@ -35,14 +35,20 @@ class HexToolPanel extends JPanel {
     spinnerEditor.getTextField().setHorizontalAlignment(JTextField.LEFT);
     dataCodingSpinner.setEditor(spinnerEditor);
 
-    var convertButton = new JButton("Convert");
+    var convertButton = new JButton(textToHex ? "Encode" : "Decode");
     convertButton.addActionListener(e -> {
       String text = textArea.getText();
       if (text == null || text.isEmpty()) {
         return;
       }
       Charset charset = (Charset) spinnerModel.getValue();
-      textArea.setText(StringUtils.toHexString(text.getBytes(charset)));
+      String result;
+      if (textToHex) {
+        result = StringUtils.toHexString(text.getBytes(charset));
+      } else {
+        result = new String(StringUtils.bytesFromHex(text), charset);
+      }
+      textArea.setText(result);
     });
 
     var copyButton = new JButton("Copy");

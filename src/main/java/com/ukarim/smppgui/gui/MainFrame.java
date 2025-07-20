@@ -57,11 +57,18 @@ public class MainFrame extends JFrame {
         });
 
         var toolsMenu = new JMenu("Tools");
-        JMenuItem stringToHexItem = new JMenuItem("Text to Hex");
+        JMenuItem stringToHexItem = new JMenuItem("Encode text as hex string");
         toolsMenu.add(stringToHexItem);
         stringToHexItem.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, new HexToolPanel(), "Text to Hex convertor", JOptionPane.PLAIN_MESSAGE);
+            JOptionPane.showMessageDialog(this, new HexToolPanel(true), "Text encoder", JOptionPane.PLAIN_MESSAGE);
         });
+
+        JMenuItem hexToStringItem = new JMenuItem("Decode hex string");
+        toolsMenu.add(hexToStringItem);
+        hexToStringItem.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, new HexToolPanel(false), "Text decoder", JOptionPane.PLAIN_MESSAGE);
+        });
+
         var menuBar = new JMenuBar();
         menuBar.add(toolsMenu);
         menuBar.add(helpMenu);
