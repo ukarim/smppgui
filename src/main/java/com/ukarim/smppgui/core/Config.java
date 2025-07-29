@@ -6,7 +6,6 @@ import com.ukarim.smppgui.util.SmppCharsets;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,6 +27,9 @@ public final class Config {
     public static Config loadConfig() {
         try {
             File settingsFile = getConfigFile();
+            if (!settingsFile.exists()) {
+                return new Config(new HashSet<>());
+            }
             try (var in = new FileInputStream(settingsFile)) {
                 var properties = new Properties();
                 properties.load(in);
@@ -43,13 +45,16 @@ public final class Config {
             }
         } catch (Exception e) {
             logger.log(ERROR, "Cannot read settings file ", e);
-            return new Config(Set.of());
+            return new Config(new HashSet<>());
         }
     }
 
     public void saveLoginData(SavedLoginData loginData) {
         try {
             File settingsFile = getConfigFile();
+            if (!settingsFile.exists()) {
+                settingsFile.createNewFile();
+            }
             savedLogins.add(loginData);
             Properties properties = new Properties();
             int c = 1;
@@ -68,13 +73,9 @@ public final class Config {
         return Set.copyOf(savedLogins);
     }
 
-    private static File getConfigFile() throws IOException {
+    private static File getConfigFile() {
         Path settingsFilePath = Paths.get(System.getProperty("user.home"), "smppgui.properties");
-        File settingsFile = settingsFilePath.toFile();
-        if (!settingsFile.exists()) {
-            boolean created = settingsFile.createNewFile();
-        }
-        return settingsFile;
+        return settingsFilePath.toFile();
     }
 
     public static class SavedLoginData {

@@ -18,7 +18,6 @@ public class MainFrame extends JFrame {
     private static final int WIDTH = 1200;
     private static final int HEIGHT = 700;
     private static final Image ICON = Resources.loadImage("/icon.png");
-    private static final String ABOUT_INFO = Resources.loadStr("/about.txt");
 
     public MainFrame() {
         setSize(WIDTH, HEIGHT);
@@ -53,7 +52,15 @@ public class MainFrame extends JFrame {
         JMenuItem aboutMenuItem = new JMenuItem("About");
         helpMenu.add(aboutMenuItem);
         aboutMenuItem.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, ABOUT_INFO, "", JOptionPane.INFORMATION_MESSAGE, new ImageIcon(ICON));
+            var aboutInfo = Resources.loadStr("/about.txt");
+            JOptionPane.showMessageDialog(this, aboutInfo, "", JOptionPane.INFORMATION_MESSAGE, new ImageIcon(ICON));
+        });
+
+        JMenuItem licenseItem = new JMenuItem("License");
+        helpMenu.add(licenseItem);
+        licenseItem.addActionListener(e -> {
+            var licenseText = Resources.loadStr("/META-INF/LICENSE.txt");
+            JOptionPane.showMessageDialog(this, licenseText, "", JOptionPane.PLAIN_MESSAGE);
         });
 
         var toolsMenu = new JMenu("Tools");
