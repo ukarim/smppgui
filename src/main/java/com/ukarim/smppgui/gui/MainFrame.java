@@ -12,6 +12,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.Taskbar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 public class MainFrame extends JFrame {
 
@@ -26,6 +29,7 @@ public class MainFrame extends JFrame {
         setTitle("SMPP GUI");
 
         setIconImage(ICON);
+        Taskbar.getTaskbar().setIconImage(ICON);
 
         setJMenuBar(buildMenuBar());
 
@@ -52,15 +56,31 @@ public class MainFrame extends JFrame {
         JMenuItem aboutMenuItem = new JMenuItem("About");
         helpMenu.add(aboutMenuItem);
         aboutMenuItem.addActionListener(e -> {
-            var aboutInfo = Resources.loadStr("/about.txt");
-            JOptionPane.showMessageDialog(this, aboutInfo, "", JOptionPane.INFORMATION_MESSAGE, new ImageIcon(ICON));
+            var textArea = new JTextArea();
+            textArea.setEditable(false);
+            textArea.setOpaque(false);
+            textArea.setText(Resources.loadStr("/about.txt"));
+
+            var scrollPane = new JScrollPane(textArea);
+            scrollPane.setOpaque(false);
+            scrollPane.getViewport().setOpaque(false);
+            scrollPane.setBorder(null);
+            JOptionPane.showMessageDialog(this, scrollPane, "", JOptionPane.INFORMATION_MESSAGE, new ImageIcon(ICON));
         });
 
         JMenuItem licenseItem = new JMenuItem("License");
         helpMenu.add(licenseItem);
         licenseItem.addActionListener(e -> {
-            var licenseText = Resources.loadStr("/META-INF/LICENSE.txt");
-            JOptionPane.showMessageDialog(this, licenseText, "", JOptionPane.PLAIN_MESSAGE);
+            var textArea = new JTextArea();
+            textArea.setEditable(false);
+            textArea.setOpaque(false);
+            textArea.setText(Resources.loadStr("/META-INF/LICENSE.txt"));
+
+            var scrollPane = new JScrollPane(textArea);
+            scrollPane.setOpaque(false);
+            scrollPane.getViewport().setOpaque(false);
+            scrollPane.setBorder(null);
+            JOptionPane.showMessageDialog(this, scrollPane, "", JOptionPane.PLAIN_MESSAGE);
         });
 
         var toolsMenu = new JMenu("Tools");
